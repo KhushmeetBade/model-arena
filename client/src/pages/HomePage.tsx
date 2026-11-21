@@ -42,7 +42,7 @@ export function HomePage() {
         <div className="absolute inset-0">
           <RaceScene view={showcase} mode="showcase" lowPower={mobile} />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-void/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-void/70 to-void/10 md:via-void/20 md:to-transparent" />
         <div className="pointer-events-none relative mx-auto flex h-full max-w-[1600px] flex-col justify-end px-5 pb-12">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <div className="font-display text-xs font-bold tracking-[0.5em] text-neon-cyan">AI CHAMPIONSHIP · SEASON 1</div>
@@ -81,7 +81,7 @@ export function HomePage() {
             { k: 'LAST CHAMPION', v: champName ?? 'No races yet', tone: champName ? 'text-neon-amber' : 'text-white/35' },
             { k: 'SEASON LEADER', v: leader ? `${livery(leader.modelId, leader.name).callsign} · ${leader.wins}W` : 'Awaiting first win', tone: leader ? 'text-neon-pink' : 'text-white/35' },
           ].map((s) => (
-            <div key={s.k} className="glass clip-angle p-5">
+            <div key={s.k} className="glass clip-angle min-w-0 p-5">
               <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">{s.k}</div>
               <div className={`mt-1 truncate font-display text-xl font-black ${s.tone}`}>{s.v}</div>
             </div>
@@ -123,7 +123,7 @@ export function HomePage() {
               {recent.map((r) => {
                 const champ = r.competitors.find((c) => c.modelId === r.championId);
                 return (
-                  <Link key={r.id} to={`/replays/${r.id}`} className="glass clip-angle block p-4 transition hover:bg-white/5">
+                  <Link key={r.id} to={`/replays/${r.id}`} className="glass clip-angle block min-w-0 p-4 transition hover:bg-white/5">
                     <div className="flex items-center justify-between text-xs text-white/45">
                       <span>{new Date(r.createdAt).toLocaleString()}</span>
                       <Badge tone={r.status === 'complete' ? 'lime' : 'red'}>{r.status}</Badge>

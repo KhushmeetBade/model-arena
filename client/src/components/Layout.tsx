@@ -49,11 +49,11 @@ export function Layout() {
   return (
     <div className="flex min-h-full flex-col">
       {testMode && (
-        <div role="status" className="fixed inset-x-0 top-0 z-[60] bg-neon-amber py-1 text-center font-display text-[11px] font-black tracking-[0.2em] text-black">
+        <div role="status" className="relative z-[60] h-6 truncate bg-neon-amber px-2 py-1 text-center font-display text-[11px] font-black tracking-[0.2em] text-black">
           TEST MODE — synthetic scripted models, not real AI. Real app: http://localhost:5173
         </div>
       )}
-      <header className={`z-50 ${immersive ? 'absolute inset-x-0 top-0' : 'sticky top-0'} border-b border-white/5 bg-void/70 backdrop-blur-xl`}>
+      <header className={`z-50 ${immersive ? `absolute inset-x-0 ${testMode ? 'top-6' : 'top-0'}` : 'sticky top-0'} border-b border-white/5 bg-void/70 backdrop-blur-xl`}>
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-6 px-4">
           <NavLink to="/" className="flex items-center gap-2">
             <img src="/favicon.svg" className="h-7 w-7" alt="" />

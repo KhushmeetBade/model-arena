@@ -37,7 +37,8 @@ export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onC
               {champLv.callsign}
             </motion.h2>
             <div className="mt-1 text-white/60">
-              {champLv.modelName} · {providerLabel(champ.provider)} · #{champLv.number} {champLv.chassisName}
+              {champLv.callsign !== champLv.modelName.toUpperCase() && <>{champLv.modelName} · </>}
+              {providerLabel(champ.provider)} · #{champLv.number} {champLv.chassisName}
             </div>
           </div>
         ) : (

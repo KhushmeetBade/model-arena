@@ -32,7 +32,7 @@ export function ReplaysPage() {
         {list.map((r) => {
           const champ = r.competitors.find((c) => c.modelId === r.championId);
           return (
-            <Link key={r.id} to={`/replays/${r.id}`} className="glass clip-angle block p-4 transition hover:bg-white/5">
+            <Link key={r.id} to={`/replays/${r.id}`} className="glass clip-angle block min-w-0 p-4 transition hover:bg-white/5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-white/45">{new Date(r.createdAt).toLocaleString()}</span>
                 <Badge tone={r.status === 'complete' ? 'lime' : 'red'}>{r.status}</Badge>

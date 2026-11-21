@@ -111,7 +111,7 @@ export function ChampionsPage() {
               const c = r.competitors.find((x) => x.modelId === r.championId)!;
               const lv = livery(c.modelId, c.name);
               return (
-                <Link key={r.id} to={`/replays/${r.id}`} className="glass flex items-center gap-3 p-3 hover:bg-white/5" style={{ borderLeft: `4px solid ${lv.primary}` }}>
+                <Link key={r.id} to={`/replays/${r.id}`} className="glass flex min-w-0 items-center gap-3 p-3 hover:bg-white/5" style={{ borderLeft: `4px solid ${lv.primary}` }}>
                   <Trophy className="w-8 shrink-0" />
                   <div className="min-w-0">
                     <div className="font-display text-xs font-bold" style={{ color: lv.primary }}>

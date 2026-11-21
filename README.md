@@ -19,7 +19,15 @@ Then open **http://localhost:5173**. The API runs on http://localhost:8787, and 
 
 To run in production mode, use `npm start`. It builds both packages and serves the app and API together on http://localhost:8787.
 
-> The server reads `.env` only when it starts. After you edit `.env`, stop `npm run dev` with Ctrl+C and start it again.
+> In development, saving `.env` restarts the API automatically (`tsx watch --include ../.env`). With `npm start`, restart it yourself after editing `.env`. If the running server ever has a stale `.env`, Pit Crew, Garage and Race show a "restart the server" banner.
+>
+> Open the app on **:5173** while developing. Page requests to :8787 are redirected there so you never see a stale build. Every page refreshes its data automatically (every 5–30 s, and when you return to the tab), so new races, wins and quota changes appear without reloading.
+
+## Local-only by design
+
+- The API listens on `127.0.0.1` only (set `HOST` to change it). Other devices on your network can't reach it.
+- It only answers requests addressed to `localhost`/`127.0.0.1`, which blocks DNS rebinding. Requests from other websites get a 403, so a page you visit can't start races, spend your free quota or change Settings.
+- Your API key stays on the server. It is never sent to the browser, logged or stored anywhere except `.env`.
 
 ## API keys
 
@@ -41,12 +49,18 @@ To run in production mode, use `npm start`. It builds both packages and serves t
 
 ## How a race works
 
-1. **Garage:** pick up to 5 models. Each gets a deterministic, original livery and one of three chassis designs (Vortex, Spectre, Halcyon).
+1. **Garage:** pick up to 5 models. Each model gets its own car, and the **Paint Shop** lets you set its **colour** (swatches or any custom colour), **racing number** (1–99), **body style** (Vortex, Spectre, Halcyon) and **nickname** (up to 18 characters).
+   - Customizations are saved on the server (`server/data/liveries.json`). The car looks identical in the Garage, on the grid, in the HUD and live text, on the champion screen, in Champions, Replays and Home, and on any localhost port.
+   - The real model name is always shown next to a nickname.
+   - Cars you've added stay on the grid even when they're temporarily unavailable (cooldown or quota). They're flagged with the reason, and START is blocked until they're ready or removed.
 2. **Race:** `POST /api/races` validates the lineup against live availability, then runs a **quota preflight**.
    - The whole race budget (one request per car, plus up to 2 judge requests) must fit in the remaining daily and per-minute free quota. Otherwise the server refuses with HTTP 429, and it checks again when the race starts.
    - `POST /api/races/preflight {models:[...]}` is a dry run that reports the request count.
    - The client then opens the SSE stream, runs the 3‑2‑1 countdown and calls `POST /api/races/:id/start`.
-3. The server sends the same prompt to every model **concurrently** and emits these events:
+3. The server sends the same prompt to every model **concurrently**.
+   - All current free models support OpenRouter's `reasoning` parameter, so the app asks them for `reasoning: { effort: "low" }` (judge included). That leaves the token budget (1,000 by default) for the actual answer.
+   - If a model still spends its whole budget thinking, it gets a DNF with that reason.
+   - It emits these events:
    - `car.launch`: the request is sent
    - `car.first_token`: time to first token (TTFT); the car launches with nitro
    - `car.progress`: about every 120 ms, with appended text, token count and tokens/sec; a surge in tok/s fires nitro
@@ -58,7 +72,11 @@ To run in production mode, use `npm start`. It builds both packages and serves t
    - Speed is the fastest latency divided by this model's latency.
    - A DNF scores 0.
    - The highest total wins, and a tie goes to the lower latency.
-6. Every race is saved with its full event timeline. **Replays** play it back at the original timing, at 1×, 2× or 4×.
+6. Every race is saved with its full event timeline, from the moment it starts.
+   - **Replays** play it back at the original timing, at 1×, 2× or 4×.
+   - If the server restarts mid-race, that race is kept and marked *red-flagged*. It doesn't count toward the leaderboard.
+   - Races that are created but never started are discarded after 2 minutes.
+   - Answers are shown as formatted Markdown, with LaTeX maths rendered as readable text. Model output can never inject HTML.
 
 Car position on the track comes only from real stream data:
 - On the grid until the request is sent
@@ -84,11 +102,21 @@ It schedules an **automatic revalidation** at the earliest known reset time (rat
 ## Testing
 
 ```bash
-npm test                     # vitest: scoring, judge parsing, quota, SSE parser, full race pipeline over HTTP+SSE, paid-lock & quota-preflight safety
+npm test                     # server + client vitest suites (all use mock providers; no network, no AI requests)
 npm run build                # type-checks and builds server + client
 ```
 
-`server/test/ui-harness.ts` is a **test-only** server on port 8788. It runs the real race engine with a scripted stub provider, so you can check the UI without keys (run `npx tsx test/ui-harness.ts` from `server/` after `npm run build -w client`). `npm run dev` and `npm start` never use it.
+What the suites cover:
+- **Server:** scoring, judge parsing, quota and preflight, the SSE parser, and the full race pipeline over HTTP+SSE.
+  - Also: the OpenRouter provider against recorded wire formats (streams, reasoning, real 401/402/429 error bodies), the paid lock, and the local-only security rules.
+  - Also: car customization validation and persistence, abandoned races, and restart recovery.
+- **Client:** lineup handling, setup guidance, liveries ("identical everywhere"), name fitting, and the safe Markdown/LaTeX renderer.
+
+`server/test/ui-harness.ts` is a **test-only** server on port 8788.
+- It runs the real race engine with scripted stub models named `TEST ALPHA (synthetic)`, `TEST BRAVO (synthetic)` and so on.
+- Every page shows a yellow **TEST MODE** banner there, so it can't be mistaken for the real app.
+- Start it with `npx tsx test/ui-harness.ts` from `server/`, after `npm run build -w client`.
+- `npm run dev` and `npm start` never use it, and its races are never saved to `server/data`.
 
 ## Manual test checklist
 
@@ -104,7 +132,9 @@ npm run build                # type-checks and builds server + client
 
 ```
 server/src
-  app.ts            Express routes + SSE
+  app.ts            Express routes + SSE (+ /api/liveries car customization)
+  liveries.ts       customization validation (colour, number, body style, nickname)
+  lib/security.ts   local-only access control (loopback Host + same-origin)
   race.ts           race engine (concurrency, events, judging, persistence)
   judge.ts          blind judge prompt + strict JSON parsing
   scoring.ts        weighted scoring + ranking
@@ -114,7 +144,9 @@ server/src
   providers/        openrouter.ts (fetch+SSE), anthropic.ts (@anthropic-ai/sdk), openai.ts (openai SDK)
 client/src
   three/            Car, Track, RaceScene (chase camera, bloom), GarageScene
+  components/       PaintShop (car customization), Markdown (safe answer renderer), ProviderNotice (setup guidance)
   components/race/  Countdown, Hud, Telemetry, ChampionReveal, Trophy
+  store/            useArena (grid lineup), useLiveries (shared car customizations)
   pages/            Home, Garage, Race, Champions, Replays, PitCrew, Settings
   lib/              api client, race event reducer, replay/live hooks, liveries
 ```
