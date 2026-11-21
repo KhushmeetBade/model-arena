@@ -9,6 +9,8 @@ import { CompetitorResult, Evaluation, ModelInfo, ProviderError, ProviderId, Rac
 type Listener = (ev: RaceEvent) => void;
 const PROGRESS_INTERVAL_MS = 120;
 const MAX_HISTORY = 200;
+/** Races created but never started are dropped after this long. */
+export const ABANDON_MS = 2 * 60_000;
 /** At most this many judge requests per race (primary + one fallback). */
 export const MAX_JUDGE_ATTEMPTS = 2;
 /** Output cap for the judge's JSON verdict (was 4000). Leaves room for reasoning models' thinking. */
@@ -41,7 +43,15 @@ export class RaceEngine {
   ) {
     this.history = store.read();
     // Any race that was mid-flight when the server stopped can't be resumed.
-    for (const r of this.history) if (r.status === 'running' || r.status === 'judging' || r.status === 'ready') r.status = 'failed';
+    for (const r of this.history) {
+      if (r.status === 'running' || r.status === 'judging' || r.status === 'ready') {
+        r.status = 'failed';
+        r.finishedAt ??= Date.now();
+        const t = r.events.at(-1)?.t ?? 0;
+        r.events.push({ t, type: 'race.failed', data: { error: 'Server restarted mid-race — this race could not be finished.' } });
+        for (const c of r.competitors) if (c.status !== 'finished' && c.status !== 'dnf') Object.assign(c, { status: 'dnf', error: 'server restarted' });
+      }
+    }
   }
 
   private validateLineup(modelIds: unknown): string[] {
@@ -107,6 +117,10 @@ export class RaceEngine {
       })),
     };
     this.live.set(record.id, { record, listeners: new Set() });
+    // A race that is created but never started (user left during the countdown) is discarded.
+    setTimeout(() => {
+      if (this.live.get(record.id)?.record.status === 'ready') this.live.delete(record.id);
+    }, ABANDON_MS).unref?.();
     this.emit(record, 'race.created', { competitors: record.competitors.map(pick) });
     return record;
   }
@@ -150,6 +164,7 @@ export class RaceEngine {
     r.status = 'running';
     r.startedAt = Date.now();
     this.emit(r, 'race.start', { prompt: r.prompt });
+    this.persist(r); // saved from the start, so a restart mid-race still leaves a (red-flagged) replay
     void this.run(r);
     return r;
   }
@@ -285,6 +300,7 @@ export class RaceEngine {
         tps: c.tokensPerSec ?? null,
         finishReason: result.finishReason ?? null,
       });
+      this.persist(r);
     } catch (err) {
       flush(true);
       const aborted = controller.signal.aborted;
@@ -293,6 +309,7 @@ export class RaceEngine {
       c.error = aborted ? `timed out after ${Math.round(settings.timeoutMs / 1000)}s` : err instanceof Error ? err.message : String(err);
       this.quota.recordFailure(model.provider, model.id, aborted ? new ProviderError('timeout', 'timeout') : err);
       this.emit(r, 'car.dnf', { lane: c.lane, error: c.error });
+      this.persist(r);
     } finally {
       clearTimeout(timeout);
     }

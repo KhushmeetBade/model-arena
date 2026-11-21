@@ -52,6 +52,11 @@ async function toProviderError(res: Response, model?: string): Promise<ProviderE
     raw = await res.text();
     const j = JSON.parse(raw);
     message = j?.error?.metadata?.raw || j?.error?.message || message;
+    // Drop OpenRouter's upsell ("add your own provider key / credits") — this app never uses paid options.
+    message = String(message)
+      .replace(/[,;]?\s*(or )?add your own provider key[\s\S]*$/i, '.')
+      .replace(/\s*Add \d+ credits to unlock[\s\S]*$/i, '')
+      .trim();
   } catch {
     if (raw) message = raw.slice(0, 300);
   }
