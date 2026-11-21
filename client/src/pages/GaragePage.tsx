@@ -12,8 +12,8 @@ import { GarageScene } from '../three/GarageScene';
 
 export function GaragePage() {
   const { lineup, toggle } = useArena();
-  const models = useAsync(() => api.models(), []);
-  const board = useAsync(() => api.leaderboard(), []);
+  const models = useAsync(() => api.models(), [], 15_000);
+  const board = useAsync(() => api.leaderboard(), [], 10_000);
   const [focus, setFocus] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'free' | 'available'>('all');
   const [refreshing, setRefreshing] = useState(false);

@@ -24,7 +24,7 @@ class HarnessProvider implements Provider {
   keyEnvVar = 'NONE';
   isConfigured() { return true; }
   async listModels(): Promise<ModelInfo[]> {
-    return [...Object.keys(CARS), 'test-judge'].map((n) => ({ id: `openrouter:${n}`, provider: 'openrouter', providerModel: n, name: `Test: ${n.replace('test-', '').toUpperCase()}`, free: true, available: true }));
+    return [...Object.keys(CARS), 'test-judge'].map((n) => ({ id: `openrouter:${n}`, provider: 'openrouter', providerModel: n, name: `TEST ${n.replace('test-', '').toUpperCase()} (synthetic)`, free: true, available: true }));
   }
   async stream(a: StreamArgs) {
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -48,5 +48,5 @@ class HarnessProvider implements Provider {
 }
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-ui-'));
-const { app } = createApp({ dataDir: dir, providers: [new HarnessProvider()], serveClient: true });
+const { app } = createApp({ dataDir: dir, providers: [new HarnessProvider()], serveClient: true, mode: 'test' });
 app.listen(8788, () => console.log('UI harness on http://localhost:8788 (synthetic test data)'));

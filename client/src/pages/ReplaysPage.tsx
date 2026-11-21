@@ -10,7 +10,7 @@ import { fmtMs, livery, shortName } from '../lib/livery';
 import { RaceScene } from '../three/RaceScene';
 
 export function ReplaysPage() {
-  const races = useAsync(() => api.races(), []);
+  const races = useAsync(() => api.races(), [], 5_000);
   const list = races.data?.races ?? [];
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6">

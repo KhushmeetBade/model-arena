@@ -6,8 +6,8 @@ import { useAsync } from '../lib/hooks';
 import { fmtMs, livery, providerLabel, shortName } from '../lib/livery';
 
 export function ChampionsPage() {
-  const board = useAsync(() => api.leaderboard(), []);
-  const races = useAsync(() => api.races(), []);
+  const board = useAsync(() => api.leaderboard(), [], 5_000);
+  const races = useAsync(() => api.races(), [], 5_000);
   const rows = board.data?.rows ?? [];
   const top = rows.slice(0, 3);
   const podiumOrder = [top[1], top[0], top[2]];

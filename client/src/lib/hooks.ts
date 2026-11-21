@@ -22,8 +22,19 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[] = [], pollMs?:
   useEffect(() => {
     void reload();
     if (!pollMs) return;
-    const t = setInterval(reload, pollMs);
-    return () => clearInterval(t);
+    // Live data: poll while the tab is visible, and refresh immediately when the user comes back.
+    const tick = () => {
+      if (document.visibilityState === 'visible') void reload();
+    };
+    const t = setInterval(tick, pollMs);
+    const onVisible = () => document.visibilityState === 'visible' && void reload();
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return { data, error, loading, reload, setData };
@@ -51,9 +62,13 @@ export function useLiveRace(raceId: string | null) {
       ended = true;
       es.close();
     });
-    es.onopen = () => setConnected(true);
+    es.onopen = () => {
+      setConnected(true);
+      setConnError(null); // reconnected — the server replays the full event log from the start
+    };
     es.onerror = () => {
       if (ended) return;
+      setConnected(false);
       setConnError('Lost connection to the race server — retrying…');
     };
     return () => es.close();

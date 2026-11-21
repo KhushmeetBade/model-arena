@@ -5,6 +5,7 @@ import path from 'node:path';
 import { Catalog } from './catalog.js';
 import { config, RESTART_HINT } from './config.js';
 import { buildLeaderboard } from './leaderboard.js';
+import { isAllowedOrigin, localOnly } from './lib/security.js';
 import { JsonStore } from './lib/store.js';
 import { AnthropicProvider } from './providers/anthropic.js';
 import { OpenAIProvider } from './providers/openai.js';
@@ -26,6 +27,10 @@ export interface AppOptions {
   dataDir?: string;
   providers?: Provider[];
   serveClient?: boolean;
+  /** Dev only: redirect non-API page requests here (the Vite dev server with live reload). */
+  devClientUrl?: string;
+  /** 'test' marks the synthetic UI harness so the client shows a TEST MODE banner. */
+  mode?: 'live' | 'test';
   /** Override the env-derived paid lock (tests). Defaults to `ALLOW_PAID_PROVIDERS !== "true"`. */
   paidLocked?: () => boolean;
 }
@@ -77,13 +82,15 @@ export function createApp(opts: AppOptions = {}) {
   const ready = Promise.all(providers.map((p) => validate(p.id))).catch(() => undefined);
 
   const app = express();
-  app.use(cors());
+  app.disable('x-powered-by');
+  app.use(localOnly);
+  app.use(cors({ origin: (origin, cb) => cb(null, isAllowedOrigin(origin)) }));
   app.use(express.json({ limit: '64kb' }));
 
   const wrap = (fn: (req: Request, res: Response) => Promise<unknown> | unknown) => (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res)).catch(next);
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, time: Date.now() }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, time: Date.now(), mode: opts.mode ?? 'live' }));
 
   app.get('/api/models', wrap(async (req, res) => {
     await ready;
@@ -222,7 +229,11 @@ export function createApp(opts: AppOptions = {}) {
 
   app.get('/api/leaderboard', (_req, res) => res.json({ rows: buildLeaderboard(engine.list()) }));
 
-  if (opts.serveClient && fs.existsSync(config.clientDist)) {
+  if (opts.serveClient && opts.devClientUrl) {
+    // Dev: never serve the stale production build — send page requests to the live Vite app (auto-reload).
+    const target = opts.devClientUrl.replace(/\/$/, '');
+    app.get(/^(?!\/api).*/, (req, res) => res.redirect(302, `${target}${req.originalUrl}`));
+  } else if (opts.serveClient && fs.existsSync(config.clientDist)) {
     app.use(express.static(config.clientDist));
     app.get(/^(?!\/api).*/, (_req, res) => res.sendFile(path.join(config.clientDist, 'index.html')));
   }

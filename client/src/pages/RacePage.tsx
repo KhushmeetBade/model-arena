@@ -35,7 +35,7 @@ function gridView(models: ModelInfo[]): RaceView {
 export function RacePage() {
   const mobile = useIsMobile();
   const { lineup, toggle, setLineup, lastPrompt, setLastPrompt } = useArena();
-  const models = useAsync(() => api.models(), []);
+  const models = useAsync(() => api.models(), [], 15_000);
   const [prompt, setPrompt] = useState(lastPrompt || PRESETS[0]);
   const [raceId, setRaceId] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(false);
@@ -63,10 +63,15 @@ export function RacePage() {
   // Dry-run budget check whenever the (fully available) lineup changes. Makes no AI requests.
   const [plan, setPlan] = useState<RacePlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
+  const planKey = useRef('');
   useEffect(() => {
-    setPlan(null);
-    setPlanError(null);
-    if (!models.data || !lineup.length || grid.blocked.length) return;
+    // Only clear the shown budget when the lineup itself changes, not on background data refreshes.
+    if (planKey.current !== lineupKey || grid.blocked.length) {
+      setPlan(null);
+      setPlanError(null);
+    }
+    planKey.current = lineupKey;
+    if (!models.data || !lineup.length || grid.blocked.length || raceId) return;
     let cancelled = false;
     api.preflight(lineup).then(
       (p) => !cancelled && setPlan(p),
