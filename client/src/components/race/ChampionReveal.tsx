@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { fmtMs, lineupLiveries, providerLabel } from '../../lib/livery';
 import type { RaceView } from '../../lib/raceState';
+import { Markdown } from '../Markdown';
 import { Trophy } from './Trophy';
 
 export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onClose: () => void; actions?: React.ReactNode }) {
@@ -126,7 +127,7 @@ export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onC
               return (
                 <div key={s.modelId} className="glass p-4" style={{ borderTop: `3px solid ${lv(s.modelId).primary}` }}>
                   <div className="mb-2 font-display text-xs font-bold">{s.status === 'dnf' ? 'DNF' : `P${s.rank}`} · {lv(s.modelId).callsign}</div>
-                  <div className="answer-text max-h-80 overflow-y-auto font-mono text-xs leading-relaxed text-white/80">{c.text || c.error || '(no output)'}</div>
+                  <div className="max-h-80 overflow-y-auto text-[13px] leading-relaxed text-white/80">{c.text ? <Markdown text={c.text} /> : <span className="text-white/45">{c.error || '(no output)'}</span>}</div>
                 </div>
               );
             })}

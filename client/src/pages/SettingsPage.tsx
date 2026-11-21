@@ -120,7 +120,7 @@ export function SettingsPage() {
                 </p>
               )}
             </div>
-            <label className="relative inline-flex cursor-pointer items-center">
+            <label className={`relative inline-flex items-center ${s.paidLocked ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`} title={s.paidLocked ? 'Locked by ALLOW_PAID_PROVIDERS=false' : undefined}>
               <input
                 type="checkbox"
                 className="peer sr-only"

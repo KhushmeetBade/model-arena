@@ -4,7 +4,8 @@ import { Link, useParams } from 'react-router-dom';
 import { ChampionReveal } from '../components/race/ChampionReveal';
 import { Hud } from '../components/race/Hud';
 import { Telemetry } from '../components/race/Telemetry';
-import { Badge, ErrorNote, PageHeader, Panel } from '../components/ui';
+import { Icon } from '../components/Icons';
+import { Badge, EmptyState, ErrorNote, PageHeader, SkeletonRows } from '../components/ui';
 import { api } from '../lib/api';
 import { useAsync, useIsMobile, useReplay } from '../lib/hooks';
 import { fitName, fmtMs, livery } from '../lib/livery';
@@ -17,18 +18,16 @@ export function ReplaysPage() {
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6">
       <PageHeader kicker="Race archive" title="Replays" />
-      {races.error && <ErrorNote>{races.error}</ErrorNote>}
-      {!list.length && !races.loading && (
-        <Panel>
-          <p className="text-white/70">
-            No races recorded yet. Every race is saved with its real event timeline so it can be replayed exactly.{' '}
-            <Link to="/race" className="text-neon-cyan underline">
-              Start one
-            </Link>
-            .
-          </p>
-        </Panel>
+      {races.error && <ErrorNote>Couldn't load replays: {races.error}. Retrying automatically…</ErrorNote>}
+      {!list.length && !races.loading && !races.error && (
+        <EmptyState
+          icon={<Icon.replay />}
+          title="No replays yet"
+          body="Every race is saved with its real event timeline — every token, finish and verdict — so you can rewatch it exactly as it happened."
+          cta={{ to: '/race', label: 'START A RACE' }}
+        />
       )}
+      {races.loading && !list.length && <SkeletonRows rows={3} />}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {list.map((r) => {
           const champ = r.competitors.find((c) => c.modelId === r.championId);
@@ -79,10 +78,19 @@ export function ReplayPlayerPage() {
   if (race.error)
     return (
       <div className="mx-auto max-w-xl px-4 pt-24">
-        <ErrorNote>{race.error}</ErrorNote>
+        <ErrorNote>Couldn't load this replay: {race.error}</ErrorNote>
+        <Link to="/replays" className="mt-4 inline-block text-sm text-neon-cyan underline">
+          Back to all replays
+        </Link>
       </div>
     );
-  if (!race.data || !view.cars.length) return <div className="pt-24 text-center text-white/50">Loading replay…</div>;
+  if (!race.data || !view.cars.length)
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center gap-3 text-white/55">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-neon-pink" />
+        <div className="font-display text-xs tracking-[0.3em]">LOADING REPLAY</div>
+      </div>
+    );
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-void">
@@ -131,7 +139,17 @@ export function ReplayPlayerPage() {
           }
         />
       )}
-      {view.phase === 'failed' && <div className="glass absolute left-1/2 top-1/2 z-40 -translate-x-1/2 p-6 text-red-200">Race was red-flagged: {view.error}</div>}
+      {view.phase === 'failed' && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-void/70 p-4">
+          <div className="glass clip-angle max-w-md p-6 text-center">
+            <div className="font-display text-2xl font-black text-red-300">RED FLAG</div>
+            <p className="mt-2 text-white/70">{view.error}</p>
+            <Link to="/replays" className="btn-race clip-angle mt-4 inline-block px-6 py-2 text-sm font-black">
+              ALL REPLAYS
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

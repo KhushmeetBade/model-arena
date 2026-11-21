@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 export function PageHeader({ kicker, title, children }: { kicker: string; title: string; children?: ReactNode }) {
   return (
@@ -31,6 +32,33 @@ export function Panel({ children, className = '' }: { children: ReactNode; class
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   return <div className="rounded border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-200">{children}</div>;
+}
+
+/** Designed empty state: icon, headline, explanation and a call to action. */
+export function EmptyState({ icon, title, body, cta }: { icon?: ReactNode; title: string; body: string; cta?: { to: string; label: string } }) {
+  return (
+    <div className="glass clip-angle flex flex-col items-center gap-3 px-6 py-12 text-center">
+      {icon && <div className="text-neon-cyan [&_svg]:h-12 [&_svg]:w-12">{icon}</div>}
+      <div className="font-display text-xl font-black tracking-wide">{title}</div>
+      <p className="max-w-md text-white/60">{body}</p>
+      {cta && (
+        <Link to={cta.to} className="btn-race clip-angle mt-2 px-6 py-3 text-xs font-black">
+          {cta.label}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/** Pulsing placeholder rows while data loads. */
+export function SkeletonRows({ rows = 3, className = '' }: { rows?: number; className?: string }) {
+  return (
+    <div className={`space-y-2 ${className}`} aria-busy="true" aria-label="Loading">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="glass h-16 animate-pulse" style={{ opacity: 1 - i * 0.18 }} />
+      ))}
+    </div>
+  );
 }
 
 export function Stat({ label, value, tone = 'text-white' }: { label: string; value: ReactNode; tone?: string }) {

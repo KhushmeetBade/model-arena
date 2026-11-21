@@ -56,7 +56,7 @@ function RaceCars({ view, sims, mode }: { view: RaceView; sims: React.MutableRef
         <group key={c.modelId} ref={(el) => void (groups.current[i] = el)} position={[laneX(c.lane, cars.length), 0, 0]}>
           <Car primary={liveries[i].primary} accent={liveries[i].accent} chassis={liveries[i].chassis} number={liveries[i].number} sim={sims.current[i] ?? { speed: 0, boost: 0 }} showcase={mode === 'showcase'} />
           {mode === 'race' && (
-            <Html position={[0, 2.6, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+            <Html position={[0, 2.6 + (i % 2) * 0.9, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
               <div
                 className="whitespace-nowrap rounded px-2 py-0.5 font-display text-[11px] font-bold tracking-wider text-white"
                 style={{ background: 'rgba(5,4,13,.8)', border: `1px solid ${liveries[i].primary}`, boxShadow: `0 0 12px ${liveries[i].primary}` }}
@@ -95,8 +95,12 @@ function ChaseCamera({ sims, view, mode }: { sims: React.MutableRefObject<SimSta
       cam.position.lerp(new THREE.Vector3(Math.sin(a) * 22, 7, z + Math.cos(a) * 22), 1 - Math.exp(-dt * 1.2));
       look.current.lerp(new THREE.Vector3(0, 1, z - 2), 1 - Math.exp(-dt * 2));
     } else {
-      // follow the pack, biased toward the leader
-      const ps = list.map((s) => s.progress);
+      // follow the cars still racing (finished cars are already parked past the line), biased toward the leader
+      const racing = list.filter((_, i) => {
+        const st = v.cars[i]?.status;
+        return st !== 'finished' && st !== 'dnf';
+      });
+      const ps = (racing.length ? racing : list).map((s) => s.progress);
       const lead = Math.max(...ps, 0);
       const mean = ps.reduce((a, b) => a + b, 0) / Math.max(ps.length, 1);
       // frame the whole pack: bias toward the leader but keep trailing cars in shot

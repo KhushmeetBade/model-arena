@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { PaintShop } from '../components/PaintShop';
 import { useLiveries, useLiveryVersion } from '../store/useLiveries';
 import { Link } from 'react-router-dom';
-import { Badge, ErrorNote, PageHeader, Stat } from '../components/ui';
+import { Badge, EmptyState, ErrorNote, PageHeader, SkeletonRows, Stat } from '../components/ui';
 import { api } from '../lib/api';
 import { ProviderNotice } from '../components/ProviderNotice';
 import { useAsync } from '../lib/hooks';
@@ -134,7 +134,10 @@ export function GaragePage() {
             </button>
           </div>
           {refreshError && <div className="mb-3 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">{refreshError}</div>}
-          {models.loading && <div className="text-white/50">Loading verified models…</div>}
+          {models.loading && !all.length && <SkeletonRows rows={5} />}
+          {!models.loading && !all.length && !models.error && (
+            <EmptyState title="No free models listed" body="OpenRouter returned no $0 models right now. Refresh the catalog in a moment — paid models are never used as a fallback." />
+          )}
           <div className="grid gap-2 sm:grid-cols-2">
             {shown.map((m) => (
               <ModelCard key={m.id} m={m} selected={lineup.includes(m.id)} focused={m.id === focused?.id} onFocus={() => setFocus(m.id)} onToggle={() => toggle(m.id)} full={lineup.length >= MAX_LINEUP} />

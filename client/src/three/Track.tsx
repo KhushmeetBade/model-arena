@@ -1,7 +1,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 
-export const LANE_W = 3.3;
+export const LANE_W = 4.2;
 export const TRACK_LEN = 600;
 
 function canvasTex(w: number, h: number, draw: (ctx: CanvasRenderingContext2D) => void, repeat?: [number, number]) {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { fitName, lineupLiveries } from '../../lib/livery';
+import { Markdown } from '../Markdown';
 import type { RaceView } from '../../lib/raceState';
 
 /** Live radio: the real streamed answer text of each competitor. */
@@ -27,8 +28,8 @@ export function Telemetry({ view, className = '' }: { view: RaceView; className?
           </button>
         ))}
       </div>
-      <div ref={box} className="answer-text min-h-0 flex-1 overflow-y-auto p-3 font-mono text-[12px] leading-relaxed text-white/85">
-        {car.text || (
+      <div ref={box} className="min-h-0 flex-1 overflow-y-auto p-3 text-[13px] leading-relaxed text-white/85">
+        {car.text ? <Markdown text={car.text} /> : (
           <span className="text-white/35">
             {car.status === 'grid' && 'Waiting for green light…'}
             {car.status === 'waiting' && 'Request sent — waiting for first token…'}

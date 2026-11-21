@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLiveryVersion } from '../store/useLiveries';
 import { Trophy } from '../components/race/Trophy';
-import { ErrorNote, PageHeader, Panel } from '../components/ui';
+import { EmptyState, ErrorNote, PageHeader, Panel, SkeletonRows } from '../components/ui';
 import { api } from '../lib/api';
 import { useAsync } from '../lib/hooks';
 import { fmtMs, livery, providerLabel } from '../lib/livery';
@@ -18,18 +18,16 @@ export function ChampionsPage() {
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6">
       <PageHeader kicker="Hall of fame" title="Championship standings" />
-      {board.error && <ErrorNote>{board.error}</ErrorNote>}
-      {!rows.length && !board.loading && (
-        <Panel>
-          <p className="text-white/70">
-            No completed races yet.{' '}
-            <Link className="text-neon-cyan underline" to="/race">
-              Run the first race
-            </Link>{' '}
-            to start the championship.
-          </p>
-        </Panel>
+      {board.error && <ErrorNote>Couldn't load the standings: {board.error}. Retrying automatically…</ErrorNote>}
+      {!rows.length && !board.loading && !board.error && (
+        <EmptyState
+          icon={<Trophy className="mx-auto w-16 opacity-70" color="#ffb627" />}
+          title="The podium is waiting"
+          body="Standings, win rates and lap records appear here after the first completed race. Only real races with real free models count."
+          cta={{ to: '/race', label: 'RUN THE FIRST RACE' }}
+        />
       )}
+      {board.loading && !rows.length && <SkeletonRows rows={4} />}
 
       {top.length > 0 && (
         <div className="mx-auto mb-10 grid max-w-3xl grid-cols-3 items-end gap-3">

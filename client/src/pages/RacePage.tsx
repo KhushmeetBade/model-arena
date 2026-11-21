@@ -168,7 +168,7 @@ export function RacePage() {
             initial={{ x: mobile ? 0 : 60, y: mobile ? 60 : 0, opacity: 0 }}
             animate={{ x: 0, y: 0, opacity: 1 }}
             exit={{ opacity: 0, y: 30 }}
-            className={`absolute z-30 ${mobile ? 'inset-x-0 bottom-[60px] max-h-[62dvh] overflow-y-auto p-3' : 'right-5 top-20 bottom-5 w-[440px] overflow-y-auto'}`}
+            className={`absolute z-30 ${mobile ? 'inset-x-0 bottom-[60px] max-h-[58dvh] overflow-y-auto p-3' : 'right-5 top-20 bottom-5 w-[440px] overflow-y-auto'}`}
           >
             <div className="glass clip-angle p-5">
               <div className="font-display text-[11px] font-bold tracking-[0.35em] text-neon-cyan">RACE CONTROL</div>
@@ -203,7 +203,10 @@ export function RacePage() {
                     <div key={slot.id} className={`rounded bg-black/30 px-2 py-1.5 ${ok ? '' : 'opacity-80 ring-1 ring-neon-amber/40'}`} style={{ borderLeft: `3px solid ${lv?.primary ?? '#666'}` }}>
                       <div className="flex items-center gap-2">
                         <span className="font-display text-xs font-black italic text-white/50">L{i + 1}</span>
-                        <span className="flex-1 truncate font-display text-xs font-bold">{lv?.callsign ?? slot.id}</span>
+                        <span className="min-w-0 flex-1 truncate" title={lv?.modelName}>
+                          <span className="font-display text-xs font-bold">{lv ? `#${lv.number} ${lv.callsign}` : slot.id}</span>
+                          {lv && lv.callsign !== lv.modelName.toUpperCase() && <span className="ml-1.5 text-[11px] text-white/45">{lv.modelName}</span>}
+                        </span>
                         {slot.model && <Badge tone={slot.model.free ? 'lime' : 'amber'}>{slot.model.free ? 'free' : 'paid'}</Badge>}
                         {!ok && <Badge tone="amber">{slot.state === 'unlisted' ? 'unlisted' : 'offline'}</Badge>}
                         <button onClick={() => toggle(slot.id)} className="px-1 text-white/40 hover:text-red-300" aria-label={`Remove ${slot.model?.name ?? slot.id}`}>✕</button>
@@ -240,15 +243,18 @@ export function RacePage() {
               {planError && <div className="mt-3 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">Couldn't check the request budget: {planError}</div>}
               {error && <div className="mt-3 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>}
 
-              <button
-                onClick={start}
-                disabled={creating || !prompt.trim() || grid.ready.length === 0 || !!blockedReason || !plan}
-                className="btn-race clip-angle mt-5 w-full py-4 text-base font-black text-white"
-              >
-                {creating ? 'PREPARING GRID…' : 'START RACE'}
-              </button>
-              {plan?.preflight.ok && <p className="mt-2 text-center text-[11px] text-neon-lime/80">{budgetLabel(plan)}</p>}
-              <p className="mt-2 text-center text-[11px] text-white/40">Cars move only on real streamed tokens. Speed bars show measured tokens/second.</p>
+              {/* Pinned to the bottom of the panel so START is always reachable on small screens */}
+              <div className="sticky bottom-0 -mx-5 -mb-5 mt-4 bg-gradient-to-t from-[#0b0820] via-[#0b0820]/95 to-transparent px-5 pb-4 pt-3">
+                <button
+                  onClick={start}
+                  disabled={creating || !prompt.trim() || grid.ready.length === 0 || !!blockedReason || !plan}
+                  className="btn-race clip-angle w-full py-4 text-base font-black text-white disabled:opacity-50"
+                >
+                  {creating ? 'PREPARING GRID…' : !plan && !blockedReason && grid.ready.length ? 'CHECKING QUOTA…' : 'START RACE'}
+                </button>
+                {plan?.preflight.ok && <p className="mt-2 text-center text-[11px] text-neon-lime/80">{budgetLabel(plan)}</p>}
+                <p className="mt-1 text-center text-[11px] text-white/40">Cars move only on real streamed tokens. Speed bars show measured tokens/second.</p>
+              </div>
             </div>
           </motion.div>
         )}
