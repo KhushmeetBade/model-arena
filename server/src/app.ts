@@ -17,7 +17,7 @@ import { Provider, ProviderError, ProviderId, RaceRecord, Settings } from './typ
 export const DEFAULT_SETTINGS: Settings = {
   judgeModel: 'auto',
   weights: { quality: 65, speed: 25, completion: 10 },
-  maxTokens: 700,
+  maxTokens: 1000, // headroom for reasoning models (all current free models support `reasoning`)
   timeoutMs: 120_000,
   allowPaid: false,
   systemPrompt: 'Answer the user directly and accurately. Be concise but complete.',

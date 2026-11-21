@@ -10,6 +10,8 @@ export interface ModelInfo {
   contextLength?: number;
   /** True when the provider bills $0 for this model. */
   free: boolean;
+  /** Model accepts OpenRouter's `reasoning` parameter (it may "think" before answering). */
+  reasoning?: boolean;
   available: boolean;
   unavailableReason?: string;
 }
@@ -19,6 +21,8 @@ export interface StreamArgs {
   prompt: string;
   system?: string;
   maxTokens: number;
+  /** Ask reasoning models to think briefly so the token budget is left for the actual answer. */
+  reasoningEffort?: 'low' | 'medium' | 'high';
   signal: AbortSignal;
   onDelta: (text: string) => void;
   /** Reasoning/thinking tokens streamed by some models (not part of the answer). */

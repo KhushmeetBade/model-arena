@@ -262,6 +262,20 @@ describe('judge limits', () => {
     expect(race.evaluation.note).toMatch(/skipped/);
   });
 
+  it('explains a DNF when a reasoning model spends its whole budget thinking', async () => {
+    const p = new RecordingProvider('openrouter', 'free', ['thinker', 'j1'], {
+      thinker: (a) => {
+        a.onReasoning?.('hmm… '.repeat(50));
+        return { text: '' };
+      },
+      j1: () => ({ text: verdict(['A']) }),
+    });
+    const { app } = createApp({ dataDir: tmp(), providers: [p] });
+    const { race } = await runRace(app, ['openrouter:thinker']);
+    expect(race.competitors[0]).toMatchObject({ status: 'dnf' });
+    expect(race.competitors[0].error).toMatch(/whole 1000-token budget reasoning/);
+  });
+
   it('uses the fallback judge when the first one fails for a non-quota reason', async () => {
     const p = new RecordingProvider('openrouter', 'free', ['car', 'j1', 'j2'], {
       j1: () => ({ text: 'not json' }),

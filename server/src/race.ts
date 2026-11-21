@@ -244,6 +244,7 @@ export class RaceEngine {
         prompt: r.prompt,
         system: settings.systemPrompt || undefined,
         maxTokens: settings.maxTokens,
+        reasoningEffort: model.reasoning ? 'low' : undefined,
         signal: controller.signal,
         onDelta: (t) => {
           onFirst();
@@ -258,7 +259,14 @@ export class RaceEngine {
         },
       });
       flush(true);
-      if (!result.text.trim()) throw new ProviderError('returned an empty answer', 'other');
+      if (!result.text.trim()) {
+        throw new ProviderError(
+          c.reasoningChars > 0
+            ? `spent its whole ${settings.maxTokens}-token budget reasoning and never answered (raise "Max output tokens" in Settings)`
+            : 'returned an empty answer',
+          'other',
+        );
+      }
       c.text = result.text;
       c.latencyMs = Date.now() - sentAt;
       c.outputTokens = result.outputTokens ?? tokensSoFar();
@@ -341,6 +349,7 @@ export class RaceEngine {
           prompt,
           system: JUDGE_SYSTEM,
           maxTokens: JUDGE_MAX_TOKENS,
+          reasoningEffort: j.reasoning ? 'low' : undefined,
           signal: controller.signal,
           onDelta: () => undefined,
         });

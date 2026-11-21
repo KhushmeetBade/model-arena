@@ -11,6 +11,7 @@ interface OrModel {
   context_length?: number;
   pricing?: Record<string, string | number | undefined>;
   architecture?: { output_modalities?: string[] };
+  supported_parameters?: string[];
 }
 
 /**
@@ -104,6 +105,7 @@ export class OpenRouterProvider implements Provider {
         description: m.description?.slice(0, 280),
         contextLength: m.context_length,
         free: true,
+        reasoning: !!m.supported_parameters?.includes('reasoning'),
         available: true,
       }));
   }
@@ -129,6 +131,7 @@ export class OpenRouterProvider implements Provider {
         model: args.model,
         messages,
         max_tokens: args.maxTokens,
+        ...(args.reasoningEffort ? { reasoning: { effort: args.reasoningEffort } } : {}),
         stream: true,
         usage: { include: true },
       }),
