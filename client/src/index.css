@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "@fontsource/orbitron/500.css";
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/orbitron/900.css";
+@import "@fontsource/rajdhani/500.css";
+@import "@fontsource/rajdhani/600.css";
+@import "@fontsource/rajdhani/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+
+@theme {
+  --font-display: "Orbitron", ui-sans-serif, system-ui;
+  --font-sans: "Rajdhani", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-void: #05040d;
+  --color-night: #0b0920;
+  --color-panel: #110d2b;
+  --color-neon-pink: #ff2bd6;
+  --color-neon-cyan: #22e5ff;
+  --color-neon-lime: #b6ff3b;
+  --color-neon-amber: #ffb627;
+  --color-neon-violet: #8b5cff;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-void);
+  color: #e9e6ff;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+.glass {
+  background: linear-gradient(160deg, rgba(30, 22, 74, 0.72), rgba(10, 8, 28, 0.82));
+  border: 1px solid rgba(139, 92, 255, 0.28);
+  box-shadow: 0 0 0 1px rgba(34, 229, 255, 0.04) inset, 0 20px 60px -20px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(14px);
+}
+.clip-angle { clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+.clip-tab { clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.text-glow-cyan { text-shadow: 0 0 18px rgba(34, 229, 255, 0.75); }
+.text-glow-pink { text-shadow: 0 0 18px rgba(255, 43, 214, 0.75); }
+.grid-floor {
+  background-image:
+    linear-gradient(rgba(139, 92, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 255, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.scanlines::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px);
+}
+.btn-race {
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  background: linear-gradient(90deg, #ff2bd6, #8b5cff 55%, #22e5ff);
+  box-shadow: 0 0 30px -4px rgba(255, 43, 214, 0.7);
+}
+.btn-race:disabled { filter: grayscale(0.8) brightness(0.6); box-shadow: none; cursor: not-allowed; }
+.answer-text { white-space: pre-wrap; word-break: break-word; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(139, 92, 255, 0.35); border-radius: 8px; }
+input[type="range"] { accent-color: #ff2bd6; }
