@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLiveryVersion } from '../store/useLiveries';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChampionReveal } from '../components/race/ChampionReveal';
@@ -33,6 +34,7 @@ function gridView(models: ModelInfo[]): RaceView {
 }
 
 export function RacePage() {
+  useLiveryVersion(); // re-render when a car is customized
   const mobile = useIsMobile();
   const { lineup, toggle, setLineup, lastPrompt, setLastPrompt } = useArena();
   const models = useAsync(() => api.models(), [], 15_000);

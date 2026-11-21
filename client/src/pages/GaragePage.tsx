@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { PaintShop } from '../components/PaintShop';
+import { useLiveries, useLiveryVersion } from '../store/useLiveries';
 import { Link } from 'react-router-dom';
 import { Badge, ErrorNote, PageHeader, Stat } from '../components/ui';
 import { api } from '../lib/api';
@@ -6,11 +8,12 @@ import { ProviderNotice } from '../components/ProviderNotice';
 import { useAsync } from '../lib/hooks';
 import { resolveLineup } from '../lib/lineup';
 import { fmtMs, livery, providerLabel, shortName } from '../lib/livery';
-import type { ModelInfo } from '../lib/types';
+import type { CarCustom, ModelInfo } from '../lib/types';
 import { MAX_LINEUP, useArena } from '../store/useArena';
 import { GarageScene } from '../three/GarageScene';
 
 export function GaragePage() {
+  useLiveryVersion(); // re-render when a car is customized
   const { lineup, toggle } = useArena();
   const models = useAsync(() => api.models(), [], 15_000);
   const board = useAsync(() => api.leaderboard(), [], 10_000);
@@ -41,7 +44,12 @@ export function GaragePage() {
   }, [all.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const focused = all.find((m) => m.id === focus) ?? all[0];
-  const lv = useMemo(() => (focused ? livery(focused.id, focused.name) : null), [focused]);
+  // Paint-shop draft: starts from the saved customization and previews live on the 3D car.
+  const saved = useLiveries((s) => (focused ? s.map[focused.id] : undefined));
+  const [draft, setDraft] = useState<CarCustom>({});
+  const savedKey = JSON.stringify(saved ?? {});
+  useEffect(() => setDraft(saved ? { ...saved } : {}), [focused?.id, savedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lv = focused ? livery(focused.id, focused.name, draft) : null;
   const stats = board.data?.rows.find((r) => r.modelId === focused?.id);
   const grid = resolveLineup(lineup, models.data ? all : []);
   const shown = all.filter((m) => (filter === 'free' ? m.free : filter === 'available' ? m.available : true));
@@ -70,15 +78,16 @@ export function GaragePage() {
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
         {focused && lv && (
           <div className="glass clip-angle overflow-hidden lg:sticky lg:top-20 lg:self-start">
-            <div className="relative h-[300px] md:h-[420px]">
+            <div className="relative h-[240px] md:h-[400px]">
               <GarageScene livery={lv} />
-              <div className="pointer-events-none absolute left-4 top-4">
+              <div className="pointer-events-none absolute left-4 top-4 right-4">
                 <div className="font-display text-[10px] font-bold tracking-[0.3em] text-white/50">
                   #{lv.number} · {lv.chassisName} CHASSIS
                 </div>
-                <div className="font-display text-2xl font-black italic" style={{ color: lv.primary, textShadow: `0 0 24px ${lv.primary}` }}>
+                <div className="truncate font-display text-2xl font-black italic" style={{ color: lv.primary, textShadow: `0 0 24px ${lv.primary}` }}>
                   {lv.callsign}
                 </div>
+                {lv.callsign !== lv.modelName.toUpperCase() && <div className="text-xs text-white/60">driven by {lv.modelName}</div>}
               </div>
               <div className="pointer-events-none absolute bottom-3 right-4 text-[11px] text-white/40">Drag to rotate</div>
             </div>
@@ -104,6 +113,7 @@ export function GaragePage() {
               >
                 {lineup.includes(focused.id) ? 'REMOVE FROM GRID' : lineup.length >= MAX_LINEUP ? 'GRID FULL (5)' : focused.available ? 'ADD TO GRID' : 'UNAVAILABLE'}
               </button>
+              <PaintShop model={focused} draft={draft} onDraft={setDraft} />
             </div>
           </div>
         )}
@@ -147,7 +157,14 @@ function ModelCard({ m, selected, focused, onFocus, onToggle, full }: { m: Model
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">{lv.maker}</div>
-          <div className="truncate font-display text-sm font-bold">{shortName(m.name)}</div>
+          {lv.callsign !== lv.modelName.toUpperCase() ? (
+            <>
+              <div className="truncate font-display text-sm font-bold" style={{ color: lv.primary }}>{lv.callsign}</div>
+              <div className="truncate text-[11px] text-white/55">{shortName(m.name)}</div>
+            </>
+          ) : (
+            <div className="truncate font-display text-sm font-bold">{shortName(m.name)}</div>
+          )}
         </div>
         <div className="font-display text-xl font-black italic" style={{ color: lv.accent }}>
           #{lv.number}

@@ -79,7 +79,7 @@ export function Hud({ view, clockMs, compact = false }: { view: RaceView; clockM
                     </div>
                     {!compact && (
                       <div className="mt-0.5 flex justify-between font-mono text-[9px] text-white/40">
-                        <span>{providerLabel(c.provider)}</span>
+                        <span className="truncate">{lv.callsign !== lv.modelName.toUpperCase() ? lv.modelName : providerLabel(c.provider)}</span>
                         <span>TTFT {fmtMs(c.ttftMs)} · {c.outputTokens ?? c.tokens} tok{c.tokensEstimated !== false && c.status !== 'finished' ? '~' : ''}</span>
                       </div>
                     )}

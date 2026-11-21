@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLiveryVersion } from '../store/useLiveries';
 import { Link, useParams } from 'react-router-dom';
 import { ChampionReveal } from '../components/race/ChampionReveal';
 import { Hud } from '../components/race/Hud';
@@ -6,10 +7,11 @@ import { Telemetry } from '../components/race/Telemetry';
 import { Badge, ErrorNote, PageHeader, Panel } from '../components/ui';
 import { api } from '../lib/api';
 import { useAsync, useIsMobile, useReplay } from '../lib/hooks';
-import { fmtMs, livery, shortName } from '../lib/livery';
+import { fitName, fmtMs, livery } from '../lib/livery';
 import { RaceScene } from '../three/RaceScene';
 
 export function ReplaysPage() {
+  useLiveryVersion(); // re-render when a car is customized
   const races = useAsync(() => api.races(), [], 5_000);
   const list = races.data?.races ?? [];
   return (
@@ -44,14 +46,14 @@ export function ReplaysPage() {
                     const lv = livery(c.modelId, c.name);
                     return (
                       <span key={c.modelId} className="rounded bg-black/40 px-1.5 py-0.5 font-display text-[10px] font-bold" style={{ color: lv.primary }}>
-                        {c.status === 'dnf' ? 'DNF' : `P${c.rank ?? '?'}`} {shortName(c.name).slice(0, 16)}
+                        {c.status === 'dnf' ? 'DNF' : `P${c.rank ?? '?'}`} {fitName(lv.callsign, 18)}
                       </span>
                     );
                   })}
               </div>
               {champ && (
                 <div className="mt-3 text-sm">
-                  🏆 <b>{shortName(champ.name)}</b> <span className="text-white/50">· {champ.scores?.total} pts · {fmtMs(champ.latencyMs)}</span>
+                  🏆 <b style={{ color: livery(champ.modelId, champ.name).primary }}>{livery(champ.modelId, champ.name).callsign}</b> <span className="text-white/50">· {champ.scores?.total} pts · {fmtMs(champ.latencyMs)}</span>
                 </div>
               )}
             </Link>
@@ -63,6 +65,7 @@ export function ReplaysPage() {
 }
 
 export function ReplayPlayerPage() {
+  useLiveryVersion(); // re-render when a car is customized
   const { id } = useParams();
   const mobile = useIsMobile();
   const race = useAsync(() => api.race(id!), [id]);

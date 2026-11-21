@@ -36,7 +36,7 @@ export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onC
               {champLv.callsign}
             </motion.h2>
             <div className="mt-1 text-white/60">
-              {providerLabel(champ.provider)} · #{champLv.number} {champLv.chassisName}
+              {champLv.modelName} · {providerLabel(champ.provider)} · #{champLv.number} {champLv.chassisName}
             </div>
           </div>
         ) : (
@@ -90,7 +90,8 @@ export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onC
                     <tr key={s.modelId} className="border-t border-white/5 align-top">
                       <td className="py-2 font-display font-black italic">{s.status === 'dnf' ? 'DNF' : s.rank}</td>
                       <td className="py-2">
-                        <div className="font-display text-xs font-bold" style={{ color: lv(s.modelId).primary }}>{lv(s.modelId).callsign}</div>
+                        <div className="font-display text-xs font-bold" style={{ color: lv(s.modelId).primary }}>#{lv(s.modelId).number} {lv(s.modelId).callsign}</div>
+                        {lv(s.modelId).callsign !== lv(s.modelId).modelName.toUpperCase() && <div className="text-[11px] text-white/45">{lv(s.modelId).modelName}</div>}
                         {s.judge?.comment && <div className="max-w-[260px] text-xs text-white/50">{s.judge.comment}</div>}
                         {c.error && <div className="max-w-[260px] truncate text-xs text-red-300/80" title={c.error}>{c.error}</div>}
                       </td>

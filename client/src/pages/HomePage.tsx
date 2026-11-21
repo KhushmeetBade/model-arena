@@ -1,15 +1,17 @@
 import { motion } from 'framer-motion';
+import { useLiveryVersion } from '../store/useLiveries';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ProviderNotice } from '../components/ProviderNotice';
 import { Badge, ErrorNote } from '../components/ui';
-import { shortName } from '../lib/livery';
+import { livery } from '../lib/livery';
 import { api } from '../lib/api';
 import { useAsync, useIsMobile } from '../lib/hooks';
 import { emptyView, type RaceView } from '../lib/raceState';
 import { RaceScene } from '../three/RaceScene';
 
 export function HomePage() {
+  useLiveryVersion(); // re-render when a car is customized
   const mobile = useIsMobile();
   const models = useAsync(() => api.models(), [], 30_000);
   const providers = useAsync(() => api.providers(), [], 10_000);
@@ -28,7 +30,8 @@ export function HomePage() {
 
   const free = (models.data?.models ?? []).filter((m) => m.free);
   const lastChamp = races.data?.races.find((r) => r.championId);
-  const champName = lastChamp?.competitors.find((c) => c.modelId === lastChamp.championId)?.name;
+  const champC = lastChamp?.competitors.find((c) => c.modelId === lastChamp.championId);
+  const champName = champC ? livery(champC.modelId, champC.name).callsign : undefined;
   const leader = board.data?.rows[0];
   const recent = (races.data?.races ?? []).slice(0, 3);
   const serverError = models.error ?? providers.error ?? races.error ?? board.error;
@@ -75,8 +78,8 @@ export function HomePage() {
           {[
             { k: 'FREE COMPETITORS', v: free.length, tone: 'text-neon-lime' },
             { k: 'RACES RUN', v: races.data?.races.filter((r) => r.status === 'complete').length ?? 0, tone: 'text-neon-cyan' },
-            { k: 'LAST CHAMPION', v: champName ? shortName(champName) : 'No races yet', tone: champName ? 'text-neon-amber' : 'text-white/35' },
-            { k: 'SEASON LEADER', v: leader ? `${shortName(leader.name)} · ${leader.wins}W` : 'Awaiting first win', tone: leader ? 'text-neon-pink' : 'text-white/35' },
+            { k: 'LAST CHAMPION', v: champName ?? 'No races yet', tone: champName ? 'text-neon-amber' : 'text-white/35' },
+            { k: 'SEASON LEADER', v: leader ? `${livery(leader.modelId, leader.name).callsign} · ${leader.wins}W` : 'Awaiting first win', tone: leader ? 'text-neon-pink' : 'text-white/35' },
           ].map((s) => (
             <div key={s.k} className="glass clip-angle p-5">
               <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">{s.k}</div>
@@ -126,7 +129,7 @@ export function HomePage() {
                       <Badge tone={r.status === 'complete' ? 'lime' : 'red'}>{r.status}</Badge>
                     </div>
                     <p className="mt-2 line-clamp-2 text-sm text-white/85">{r.prompt}</p>
-                    <div className="mt-2 text-sm">{champ ? <>🏆 <b>{shortName(champ.name)}</b></> : <span className="text-white/45">No champion</span>}</div>
+                    <div className="mt-2 text-sm">{champ ? <>🏆 <b style={{ color: livery(champ.modelId, champ.name).primary }}>{livery(champ.modelId, champ.name).callsign}</b></> : <span className="text-white/45">No champion</span>}</div>
                   </Link>
                 );
               })}

@@ -1,4 +1,4 @@
-import type { LeaderboardRow, ModelInfo, ProvidersResponse, RacePlan, RaceRecord, RaceSummary, Settings } from './types';
+import type { CarCustom, LeaderboardRow, LiveryMap, ModelInfo, ProvidersResponse, RacePlan, RaceRecord, RaceSummary, Settings } from './types';
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) } });
@@ -20,4 +20,7 @@ export const api = {
   race: (id: string) => req<RaceRecord>(`/api/races/${id}`),
   races: () => req<{ races: RaceSummary[] }>('/api/races'),
   leaderboard: () => req<{ rows: LeaderboardRow[] }>('/api/leaderboard'),
+  liveries: () => req<{ liveries: LiveryMap }>('/api/liveries'),
+  saveLivery: (modelId: string, custom: CarCustom) => req<{ modelId: string; livery: CarCustom | null }>('/api/liveries', { method: 'PUT', body: JSON.stringify({ modelId, ...custom }) }),
+  resetLivery: (modelId: string) => req<{ ok: true }>(`/api/liveries?modelId=${encodeURIComponent(modelId)}`, { method: 'DELETE' }),
 };

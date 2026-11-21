@@ -66,6 +66,16 @@ export interface Settings {
   paidLocked?: boolean;
 }
 
+/** Per-model car customization; unset fields fall back to the model's default livery. */
+export interface CarCustom {
+  color?: string;
+  number?: number;
+  chassis?: 0 | 1 | 2;
+  nickname?: string;
+  updatedAt?: number;
+}
+export type LiveryMap = Record<string, CarCustom>;
+
 export interface ProvidersResponse {
   env?: { paidLocked: boolean; envChangedSinceStart: boolean; restartHint: string };
   providers: ProviderStatus[];

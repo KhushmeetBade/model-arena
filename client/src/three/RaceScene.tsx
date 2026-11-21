@@ -1,9 +1,10 @@
 import { Html, Stars } from '@react-three/drei';
+import { useLiveryVersion } from '../store/useLiveries';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { Suspense, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { lineupLiveries } from '../lib/livery';
+import { fitName, lineupLiveries } from '../lib/livery';
 import { targetProgress, type CarState, type RaceView } from '../lib/raceState';
 import { Car, type CarSim } from './Car';
 import { LANE_W, Track, TRACK_LEN } from './Track';
@@ -17,8 +18,9 @@ function laneX(lane: number, n: number) {
 }
 
 function RaceCars({ view, sims, mode }: { view: RaceView; sims: React.MutableRefObject<SimState[]>; mode: 'race' | 'showcase' }) {
+  const liveryVersion = useLiveryVersion();
   const cars = view.cars;
-  const liveries = useMemo(() => lineupLiveries(cars), [cars.map((c) => c.modelId).join('|')]);
+  const liveries = useMemo(() => lineupLiveries(cars), [cars.map((c) => c.modelId).join('|'), liveryVersion]);
   const groups = useRef<(THREE.Group | null)[]>([]);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -60,7 +62,7 @@ function RaceCars({ view, sims, mode }: { view: RaceView; sims: React.MutableRef
                 style={{ background: 'rgba(5,4,13,.8)', border: `1px solid ${liveries[i].primary}`, boxShadow: `0 0 12px ${liveries[i].primary}` }}
               >
                 {c.finishPos ? `P${c.finishPos} · ` : c.status === 'dnf' ? 'DNF · ' : ''}
-                {liveries[i].callsign.slice(0, 16)}
+                {fitName(liveries[i].callsign, 18)}
               </div>
             </Html>
           )}

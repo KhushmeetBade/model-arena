@@ -6,6 +6,7 @@ import { Catalog } from './catalog.js';
 import { config, RESTART_HINT } from './config.js';
 import { buildLeaderboard } from './leaderboard.js';
 import { isAllowedOrigin, localOnly } from './lib/security.js';
+import { LiveryMap, parseCustom } from './liveries.js';
 import { JsonStore } from './lib/store.js';
 import { AnthropicProvider } from './providers/anthropic.js';
 import { OpenAIProvider } from './providers/openai.js';
@@ -47,6 +48,8 @@ export function createApp(opts: AppOptions = {}) {
   const quota = new QuotaManager(new JsonStore(dataDir, 'quota.json', () => ({ providers: {}, models: {} })));
   const catalog = new Catalog(providers, quota, getSettings, paidLocked);
   const engine = new RaceEngine(catalog, quota, new JsonStore<RaceRecord[]>(dataDir, 'races.json', () => []), getSettings);
+  const liveryStore = new JsonStore<LiveryMap>(dataDir, 'liveries.json', () => ({}));
+  const liveries: LiveryMap = liveryStore.read();
 
   /** Verifies a provider's key and refreshes known limits. */
   async function validate(id: ProviderId) {
@@ -228,6 +231,30 @@ export function createApp(opts: AppOptions = {}) {
   });
 
   app.get('/api/leaderboard', (_req, res) => res.json({ rows: buildLeaderboard(engine.list()) }));
+
+  // ---- Car customization (colour, number, body style, nickname) ----
+  app.get('/api/liveries', (_req, res) => res.json({ liveries }));
+  app.put('/api/liveries', wrap(async (req, res) => {
+    let parsed;
+    try {
+      parsed = parseCustom(req.body);
+    } catch (e) {
+      return void res.status(400).json({ error: e instanceof Error ? e.message : 'Invalid customization' });
+    }
+    const known = (await catalog.list()).some((m) => m.id === parsed.modelId) || engine.list().some((r) => r.competitors.some((c) => c.modelId === parsed.modelId));
+    if (!known) return void res.status(404).json({ error: 'Unknown model' });
+    const { updatedAt, ...fields } = parsed.custom;
+    if (Object.keys(fields).length === 0) delete liveries[parsed.modelId];
+    else liveries[parsed.modelId] = { ...fields, updatedAt };
+    liveryStore.write(liveries);
+    res.json({ modelId: parsed.modelId, livery: liveries[parsed.modelId] ?? null });
+  }));
+  app.delete('/api/liveries', (req, res) => {
+    const modelId = typeof req.query.modelId === 'string' ? req.query.modelId : '';
+    delete liveries[modelId];
+    liveryStore.write(liveries);
+    res.json({ ok: true });
+  });
 
   if (opts.serveClient && opts.devClientUrl) {
     // Dev: never serve the stale production build — send page requests to the live Vite app (auto-reload).

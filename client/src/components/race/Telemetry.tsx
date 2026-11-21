@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { lineupLiveries } from '../../lib/livery';
+import { fitName, lineupLiveries } from '../../lib/livery';
 import type { RaceView } from '../../lib/raceState';
 
 /** Live radio: the real streamed answer text of each competitor. */
@@ -23,7 +23,7 @@ export function Telemetry({ view, className = '' }: { view: RaceView; className?
             className={`shrink-0 px-3 py-2 font-display text-[10px] font-bold tracking-wider transition ${i === tab ? 'bg-white/10 text-white' : 'text-white/45 hover:text-white'}`}
             style={{ borderBottom: i === tab ? `2px solid ${liveries[i].primary}` : '2px solid transparent' }}
           >
-            {liveries[i].callsign.slice(0, 14)}
+            {fitName(liveries[i].callsign, 16)}
           </button>
         ))}
       </div>

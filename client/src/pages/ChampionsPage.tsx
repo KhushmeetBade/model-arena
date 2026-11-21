@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
+import { useLiveryVersion } from '../store/useLiveries';
 import { Trophy } from '../components/race/Trophy';
 import { ErrorNote, PageHeader, Panel } from '../components/ui';
 import { api } from '../lib/api';
 import { useAsync } from '../lib/hooks';
-import { fmtMs, livery, providerLabel, shortName } from '../lib/livery';
+import { fmtMs, livery, providerLabel } from '../lib/livery';
 
 export function ChampionsPage() {
+  useLiveryVersion(); // re-render when a car is customized
   const board = useAsync(() => api.leaderboard(), [], 5_000);
   const races = useAsync(() => api.races(), [], 5_000);
   const rows = board.data?.rows ?? [];
@@ -38,8 +40,8 @@ export function ChampionsPage() {
             return (
               <div key={r.modelId} className="text-center">
                 <Trophy className={`mx-auto ${place === 1 ? 'w-20' : 'w-14'}`} color={place === 1 ? '#ffb627' : place === 2 ? '#c9d3ff' : '#e08a4a'} />
-                <div className="mt-1 truncate font-display text-xs font-bold md:text-sm" style={{ color: lv.primary }}>
-                  {shortName(r.name)}
+                <div className="mt-1 truncate font-display text-xs font-bold md:text-sm" style={{ color: lv.primary }} title={lv.modelName}>
+                  {lv.callsign}
                 </div>
                 <div className="text-xs text-white/50">
                   {r.wins} wins · {r.avgScore} avg
@@ -82,9 +84,9 @@ export function ChampionsPage() {
                     <td className="py-2 font-display font-black italic">{i + 1}</td>
                     <td>
                       <div className="font-display text-xs font-bold" style={{ color: lv.primary }}>
-                        {shortName(r.name)}
+                        #{lv.number} {lv.callsign}
                       </div>
-                      <div className="text-[11px] text-white/40">{providerLabel(r.provider)}</div>
+                      <div className="text-[11px] text-white/40">{lv.callsign !== lv.modelName.toUpperCase() ? `${lv.modelName} · ` : ""}{providerLabel(r.provider)}</div>
                     </td>
                     <td className="font-mono">{r.races}</td>
                     <td className="font-mono text-neon-amber">{r.wins}</td>
@@ -115,7 +117,7 @@ export function ChampionsPage() {
                   <Trophy className="w-8 shrink-0" />
                   <div className="min-w-0">
                     <div className="font-display text-xs font-bold" style={{ color: lv.primary }}>
-                      {shortName(c.name)}
+                      {lv.callsign}
                     </div>
                     <div className="truncate text-sm text-white/60">{r.prompt}</div>
                   </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useLiveries, useLiveryVersion } from '../store/useLiveries';
 import { Icon } from './Icons';
 
 const NAV = [
@@ -24,9 +25,26 @@ function useTestMode() {
   return test;
 }
 
+/** Loads saved car customizations once for the whole app and keeps them fresh. */
+function useLiverySync() {
+  const load = useLiveries((s) => s.load);
+  useEffect(() => {
+    void load();
+    const t = setInterval(() => document.visibilityState === 'visible' && void load(), 30_000);
+    const onFocus = () => void load();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [load]);
+}
+
 export function Layout() {
   const loc = useLocation();
   const testMode = useTestMode();
+  useLiverySync();
+  useLiveryVersion(); // re-render the whole app when a car is customized
   const immersive = loc.pathname.startsWith('/race') || loc.pathname.startsWith('/replays/');
   return (
     <div className="flex min-h-full flex-col">
