@@ -129,7 +129,7 @@ export function GaragePage() {
                 {f}
               </button>
             ))}
-            <button onClick={() => void refreshCatalog()} disabled={refreshing} className="ml-auto text-xs text-neon-cyan hover:underline disabled:opacity-50">
+            <button onClick={() => void refreshCatalog()} disabled={refreshing} className="ml-auto inline-flex min-h-11 items-center px-2 text-xs text-neon-cyan hover:underline disabled:opacity-50">
               {refreshing ? 'Refreshing…' : 'Refresh catalog'}
             </button>
           </div>

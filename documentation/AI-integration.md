@@ -55,6 +55,6 @@ Errors become a **DNF** with the reason (rate limit, timeout, empty answer, “s
   is subjective on open-ended prompts. Blind labels and a neutral judge reduce, but do not remove, bias.
 - Results depend on the prompt, the criteria, the judge model and model availability on that day — they are not
   universal rankings. Small samples (a few races) say little about overall model quality.
-- Free models are frequently rate-limited upstream: 14 of 42 car entries in our 10 real races were DNFs,
+- Free models are frequently rate-limited upstream: 14 of 45 car entries in our 11 real races were DNFs,
   mostly `429 temporarily rate-limited upstream`. The app records these honestly.
 - Speed reflects OpenRouter routing and provider load at that moment, not only the model.

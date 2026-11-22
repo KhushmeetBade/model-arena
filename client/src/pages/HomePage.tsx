@@ -130,7 +130,7 @@ export function HomePage() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg font-bold tracking-widest">RECENT REAL RACES</h2>
             {recent.length > 0 && (
-              <Link to="/replays" className="text-xs font-bold text-neon-cyan hover:underline">
+              <Link to="/replays" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-neon-cyan hover:underline">
                 All replays →
               </Link>
             )}

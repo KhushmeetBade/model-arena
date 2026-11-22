@@ -10,3 +10,6 @@ server/data
 .playwright-mcp
 *.log
 Model-Arena-AppFusion-2026.zip
+video/*.mp4
+video/raw/
+presentation/deck.html

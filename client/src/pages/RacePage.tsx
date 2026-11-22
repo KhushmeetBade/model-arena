@@ -239,7 +239,7 @@ export function RacePage() {
 
               <div className="mt-5 flex items-center justify-between">
                 <div className="text-xs font-bold uppercase tracking-widest text-white/50">Starting grid ({lineup.length}/{MAX_LINEUP})</div>
-                <Link to="/garage" className="text-xs font-bold text-neon-cyan hover:underline">Open garage →</Link>
+                <Link to="/garage" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-neon-cyan hover:underline">Open garage →</Link>
               </div>
               <div className="mt-2 space-y-1.5">
                 {grid.slots.map((slot, i) => {
@@ -317,7 +317,7 @@ export function RacePage() {
                 </div>
               )}
               {/* Pinned to the bottom of the panel so START is always reachable on small screens */}
-              <div className="sticky bottom-0 -mx-5 -mb-5 mt-4 bg-gradient-to-t from-[#0b0820] via-[#0b0820]/95 to-transparent px-5 pb-4 pt-3">
+              <div className="sticky bottom-0 z-10 -mx-5 -mb-5 mt-4 bg-[#0b0820] px-5 pb-4 pt-3 shadow-[0_-14px_18px_#0b0820]">
                 <button
                   onClick={start}
                   disabled={creating || !!raceId || needsCode || !prompt.trim() || grid.ready.length === 0 || !!blockedReason || !plan}

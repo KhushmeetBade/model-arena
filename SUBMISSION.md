@@ -40,9 +40,9 @@ OpenRouter. One request runs a race and streams Server-Sent Events back; races p
 private Vercel Blob in the cloud. Details: `documentation/architecture.md`, `documentation/AI-integration.md`.
 
 ## Testing actually completed
-72 automated tests (mock providers), TypeScript checks, production build, browser tests at desktop and phone
-widths, a production-mode server test, and 10 genuine AI races (including the creative prompt
-“Hey Love, find me the love of my live”). Details and bugs fixed: `documentation/testing.md`.
+74 automated tests (mock providers), TypeScript checks, production build, a mobile audit of all seven sections in
+Chrome emulation at 320 and 390 px, a secret scan of the repository and its history, and 11 genuine AI races
+(featured: race 348cee31, “Hey love, find me the love of my life.”). Details and bugs fixed: `documentation/testing.md`.
 
 ## Improvements made during testing
 Server-side paid-provider lock · whole-race quota preflight · reasoning-model token handling · judge fallback and
@@ -51,8 +51,9 @@ mobile overflow fixes · simulated demo races clearly separated from real result
 
 ## Limitations
 LLM judging is subjective and can be biased; results depend on prompt, criteria and the day's model availability;
-free models are often rate-limited (14 of 42 car entries DNF); 50 free requests per day; physical-iPhone testing
-and the public deployment are pending (see README).
+free models are often rate-limited (14 of 45 car entries DNF); 50 free requests per day; mobile verified in browser
+emulation only — physical-iPhone testing is still to do; the public deployment (https://model-arena-lake.vercel.app)
+is live but its race history has not been imported yet.
 
 ## Next steps
 User-defined judging criteria · multiple judges and consensus scoring · benchmark prompt sets with statistics ·

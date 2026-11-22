@@ -9,6 +9,9 @@ Built from scratch for **AppFusion Hackathon 2026 (TRU AI Club)** by **Apex Inte
 
 ![Home](screenshots/01-home.png)
 
+**Live:** https://model-arena-lake.vercel.app (demo races open to everyone; live races need the owner code) ·
+**Demo video:** `video/Model-Arena-Demo.mp4` (2:45, in the submission ZIP)
+
 ## Problem and users
 Comparing models normally means pasting the same prompt into several tools and judging the answers by hand.
 Model Arena puts them side by side, scores them and makes the difference visible — for students, developers,
@@ -45,7 +48,7 @@ Production mode locally: `npm start` (builds and serves everything on http://loc
 
 ## Tests
 ```bash
-npm test          # 72 tests: server (55) + client (17); mock providers only, no AI requests
+npm test          # 74 tests: server (57) + client (17); mock providers only, no AI requests
 npm run build     # TypeScript checks + production build
 ```
 `server/test/ui-harness.ts` is a test-only server (port 8788) with scripted models and a TEST MODE banner.
@@ -64,11 +67,13 @@ See `documentation/security.md`.
 
 ## Documentation
 `documentation/architecture.md` · `AI-integration.md` · `security.md` · `testing.md` · `judge-QA.md` ·
-`rubric-mapping.md` · `SUBMISSION.md` · `video/SCRIPT.md`
+`rubric-mapping.md` · `SUBMISSION.md` · `video/SCRIPT.md` (final video timeline) ·
+`presentation/` (8-slide .pptx + matching PDF; rebuild with `python3 presentation/build_deck.py`)
 
 ## Known limitations
 LLM judging is subjective; results depend on prompt, criteria and model availability; free models are often
-rate-limited; free availability and limits are controlled by OpenRouter and can change.
+rate-limited; free availability and limits are controlled by OpenRouter and can change. Mobile layout verified in
+Chrome mobile emulation (320–390 px); physical-iPhone testing is still to do.
 
 ## Future
 Custom judging criteria, multiple judges, benchmark prompt sets with statistics, more providers, usability study.

@@ -88,7 +88,7 @@ export function PaintShop({ model, draft, onDraft }: { model: ModelInfo; draft: 
               style={{ background: c, boxShadow: current.primary === c ? `0 0 14px ${c}` : undefined }}
             />
           ))}
-          <label className="relative flex h-10 cursor-pointer items-center gap-1 rounded-full border border-white/20 px-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:border-white/50">
+          <label className="relative flex h-11 cursor-pointer items-center gap-1 rounded-full border border-white/20 px-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:border-white/50">
             Custom
             <input type="color" value={current.primary} onChange={(e) => onDraft({ ...draft, color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Custom colour" />
           </label>
@@ -137,7 +137,7 @@ export function PaintShop({ model, draft, onDraft }: { model: ModelInfo; draft: 
           type="button"
           onClick={onSave}
           disabled={busy || !dirty || !numberValid}
-          className="btn-race clip-angle px-5 py-2.5 text-xs font-black disabled:opacity-40"
+          className="btn-race clip-angle min-h-11 px-5 py-2.5 text-xs font-black disabled:opacity-40"
         >
           {busy ? 'SAVING…' : dirty ? 'SAVE CAR' : 'SAVED'}
         </button>

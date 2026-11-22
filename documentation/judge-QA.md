@@ -11,7 +11,7 @@
 9. **API keys?** Server-side only (`.env` / Vercel encrypted env), never sent to the browser or committed.
 10. **Real vs simulated?** 10 stored races are genuine OpenRouter inference. The three demo races are scripted, use fictional racers, are labelled “DEMO RACE — SIMULATED RESULTS”, and never count in Champions.
 11. **Three.js link?** Car progress is computed from the stream (first token, token count, finish); the podium comes from the judge-based scores.
-12. **Limitations?** Judge subjectivity, small samples, free-model rate limits (14 of 42 entries DNF), speed depends on provider load, 50 free requests/day.
+12. **Limitations?** Judge subjectivity, small samples, free-model rate limits (14 of 45 entries DNF), speed depends on provider load, 50 free requests/day.
 13. **Next?** User-defined criteria, multiple judges/consensus, benchmark prompt sets with statistics, more providers, usability study.
-14. **Testing?** 72 automated tests (mock providers), TypeScript and build checks, browser tests at desktop/phone widths, 10 genuine races, restart-persistence test.
+14. **Testing?** 74 automated tests (mock providers), TypeScript and build checks, browser tests at desktop/phone widths, 11 genuine races, restart-persistence test.
 15. **Built during the hackathon?** Everything — project created 21 Nov 2026 ~2:45 PM. Claude Code was used for AI-assisted development, debugging, testing and documentation; it is not part of the app's inference.

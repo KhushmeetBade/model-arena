@@ -42,7 +42,7 @@ export function SettingsPage() {
       <PageHeader kicker="Race direction" title="Settings">
         <div className="flex items-center gap-3">
           {saved && <span className="text-sm text-neon-lime">{saved}</span>}
-          <button onClick={save} className="btn-race clip-angle px-6 py-2.5 text-xs font-black">
+          <button onClick={save} className="btn-race clip-angle min-h-11 px-6 py-2.5 text-xs font-black">
             SAVE
           </button>
         </div>
