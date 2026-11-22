@@ -168,10 +168,10 @@ export function ReplayPlayerPage({ demo = false }: { demo?: boolean }) {
         aria-label="Replay controls"
       >
         <button onClick={() => (done ? restart() : setPlaying((p) => !p))} className={`${btn} w-20 bg-neon-pink/30`} aria-label={done ? 'Replay again' : playing ? 'Pause' : 'Play'}>
-          {done ? '↺ AGAIN' : playing ? '❚❚ PAUSE' : '▶ PLAY'}
+          {done ? 'AGAIN' : playing ? '❚❚ PAUSE' : '▶ PLAY'}
         </button>
-        <button onClick={restart} className={btn} aria-label="Restart replay">
-          ⟲
+        <button onClick={restart} className={btn} aria-label="Restart replay" title="Restart">
+          <Icon.replay />
         </button>
         <div className="flex min-w-[120px] flex-1 items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={Math.round(duration / 1000)} aria-valuenow={Math.round(Math.min(clock, duration) / 1000)} aria-label="Replay progress">
