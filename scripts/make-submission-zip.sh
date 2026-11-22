@@ -22,9 +22,10 @@ for d in architecture AI-integration security testing judge-QA rubric-mapping; d
 git archive --format=tar HEAD | tar -x -C "$STAGE/source"
 rm -rf "$STAGE/source/screenshots" "$STAGE/source/presentation" "$STAGE/source/SUBMISSION.pdf"   # already at top level
 # Guards: no secrets, no env files, no private race content.
-if grep -rIlE 'sk-or-v1-[0-9a-f]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|vercel_blob_rw_|ARENA_ACCESS_CODE=[^ ]{8,}' "$STAGE" >/dev/null 2>&1; then echo "SECRET DETECTED — aborting"; exit 1; fi
+# (this script is excluded from its own scan: its guard patterns are literal text, not secrets)
+if grep -rIlE --exclude=make-submission-zip.sh 'sk-or-v1-[0-9a-f]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|vercel_blob_rw_|ARENA_ACCESS_CODE=[^ ]{8,}' "$STAGE" >/dev/null 2>&1; then echo "SECRET DETECTED — aborting"; exit 1; fi
 if find "$STAGE" \( -name '.env' -o -name '.env.*' \) ! -name '.env.example' | grep -q .; then echo ".env FILE DETECTED — aborting"; exit 1; fi
-if grep -rIl 'FINAL AUTONOMOUS BUILD' "$STAGE" >/dev/null 2>&1; then echo "PRIVATE RACE CONTENT DETECTED — aborting"; exit 1; fi
+if grep -rIl --exclude=make-submission-zip.sh 'FINAL AUTONOMOUS BUILD' "$STAGE" >/dev/null 2>&1; then echo "PRIVATE RACE CONTENT DETECTED — aborting"; exit 1; fi
 rm -f "$OUT"
 (cd "$(dirname "$STAGE")" && zip -qr -X "$OUT" "$NAME")
 echo "Created $OUT"
