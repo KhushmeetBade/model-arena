@@ -118,9 +118,14 @@ export class QuotaManager {
     const q = this.get(provider);
     q.validation = validation;
     q.lastValidatedAt = this.now();
-    if (validation === 'ok' && q.blockedReason === 'auth') {
-      q.blockedUntil = null;
-      q.blockedReason = null;
+    if (validation === 'ok') {
+      // A successful check supersedes any earlier failure message.
+      q.lastError = null;
+      q.lastErrorAt = null;
+      if (q.blockedReason === 'auth') {
+        q.blockedUntil = null;
+        q.blockedReason = null;
+      }
     }
     if (error) {
       q.lastError = error;

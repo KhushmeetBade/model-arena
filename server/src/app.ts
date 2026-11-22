@@ -174,8 +174,6 @@ export function createApp(opts: AppOptions = {}) {
         paidLocked: paidLocked(),
         envChangedSinceStart: config.envChangedSinceStart(),
         restartHint: RESTART_HINT,
-        // Diagnostics only while the key is rejected: shape of the stored value, never the value itself.
-        keyShape: quota.get('openrouter').validation === 'invalid_key' ? (() => { const k = config.openrouterKey(); return { length: k.length, standardPrefix: k.startsWith('sk-or-v1-'), asciiOnly: /^[\x21-\x7e]*$/.test(k) }; })() : undefined,
       },
       providers: providers.map((p) => ({
         id: p.id,
