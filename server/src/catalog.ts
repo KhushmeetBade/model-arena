@@ -61,7 +61,10 @@ export class Catalog {
     return models.map((m) => {
       const p = this.provider(m.provider)!;
       let reason: string | undefined;
-      if (!p.isConfigured()) reason = `Needs ${p.keyEnvVar} in the root .env — restart the server after adding it`;
+      if (!p.isConfigured())
+        reason = process.env.VERCEL
+          ? `Needs ${p.keyEnvVar} — the owner adds it in Vercel → Project → Settings → Environment Variables, then redeploys`
+          : `Needs ${p.keyEnvVar} in the root .env — restart the server after adding it`;
       else if (p.billing === 'paid' && this.paidLocked()) reason = 'Paid API — locked off by ALLOW_PAID_PROVIDERS=false';
       else if (p.billing === 'paid' && !settings.allowPaid) reason = 'Paid API — enable in Settings to use your credits';
       else if (!m.free && p.billing === 'free') reason = 'Not a $0 model'; // defense in depth: free provider must only yield free models

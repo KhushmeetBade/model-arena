@@ -5,7 +5,7 @@ import path from 'node:path';
 import { Catalog } from './catalog.js';
 import { config, RESTART_HINT } from './config.js';
 import { buildLeaderboard } from './leaderboard.js';
-import { FilePersistence, Persistence } from './lib/persistence.js';
+import { FilePersistence, mergeRaces, Persistence } from './lib/persistence.js';
 import { hostGuard, makeHostRules, requireAccessCode } from './lib/security.js';
 import { demoRace, demoRaces } from './demo.js';
 import { LiveryMap, parseCustom } from './liveries.js';
@@ -135,7 +135,10 @@ export function createApp(opts: AppOptions = {}) {
   app.disable('x-powered-by');
   app.use(hostGuard(hostRules));
   app.use(cors({ origin: (origin, cb) => cb(null, hostRules.isAllowedOrigin(origin)) }));
-  app.use(express.json({ limit: '64kb' }));
+  // 64 KB for normal requests; the owner-only history import below accepts up to 5 MB.
+  const smallJson = express.json({ limit: '64kb' });
+  const importJson = express.json({ limit: '5mb' });
+  app.use((req, res, next) => (req.path === '/api/admin/import' ? importJson : smallJson)(req, res, next));
 
   const wrap = (fn: (req: Request, res: Response) => Promise<unknown> | unknown) => (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res)).catch(next);
@@ -337,6 +340,41 @@ export function createApp(opts: AppOptions = {}) {
   });
 
   app.get('/api/leaderboard', (_req, res) => res.json({ rows: buildLeaderboard(engine.list()) }));
+
+  /**
+   * Owner-only: copy genuine race history (and car liveries) recorded on another instance — e.g. the
+   * local app — into this deployment's storage. Requires the access code; never calls any AI model.
+   * Records are validated and merged by id (existing races are kept); demo races are rejected.
+   */
+  app.post('/api/admin/import', access, wrap(async (req, res) => {
+    if (!opts.accessCode?.()) return void res.status(403).json({ error: 'Import is only available on deployments protected by an owner access code.' });
+    const body = req.body ?? {};
+    const races = Array.isArray(body.races) ? body.races : [];
+    if (races.length > 200) return void res.status(400).json({ error: 'At most 200 races per import' });
+    const valid = races.filter(
+      (r: unknown): r is RaceRecord => {
+        const x = r as RaceRecord;
+        return !!x && typeof x.id === 'string' && /^[0-9a-f-]{36}$/i.test(x.id) && typeof x.prompt === 'string' && Array.isArray(x.competitors) && Array.isArray(x.events) && typeof x.createdAt === 'number' && !x.demo && x.competitors.every((c) => c && c.provider !== 'demo');
+      },
+    );
+    if (valid.length !== races.length) return void res.status(400).json({ error: `${races.length - valid.length} record(s) failed validation (demo or malformed races are never imported)` });
+    const store = persistence.store<RaceRecord[]>('races.json', () => []);
+    store.write(mergeRaces(store.read(), valid) as RaceRecord[]);
+    if (body.liveries && typeof body.liveries === 'object') {
+      for (const [id, c] of Object.entries(body.liveries as Record<string, unknown>)) {
+        try {
+          const parsed = parseCustom({ modelId: id, ...(c as object) });
+          const { updatedAt, ...fields } = parsed.custom;
+          if (Object.keys(fields).length) liveries[parsed.modelId] = { ...fields, updatedAt };
+        } catch {
+          /* skip invalid livery */
+        }
+      }
+      liveryStore.write(liveries);
+    }
+    await persistence.flush();
+    res.json({ ok: true, imported: valid.length, total: engine.list().length });
+  }));
 
   // ---- DEMO races: simulated, read-only, never stored and never on the leaderboard ----
   app.get('/api/demo/races', (_req, res) => {

@@ -185,3 +185,32 @@ describe('Vercel Blob persistence', () => {
     expect((await request(app).get('/api/health')).body).toMatchObject({ deployment: 'cloud', storage: 'blob' });
   });
 });
+
+describe('owner-only history import', () => {
+  const realRace = (id: string, createdAt: number) => ({
+    id, prompt: 'p', createdAt, finishedAt: createdAt + 1, status: 'complete', weights: { quality: 65, speed: 25, completion: 10 }, events: [],
+    competitors: [{ modelId: 'openrouter:a', name: 'A', provider: 'openrouter', lane: 0, status: 'finished', text: 't', reasoningChars: 0, tokensEstimated: false, rank: 1, scores: { quality: 80, speed: 100, completion: 100, total: 87 } }],
+    championId: 'openrouter:a',
+  });
+  const id1 = '11111111-1111-4111-8111-111111111111';
+  const id2 = '22222222-2222-4222-8222-222222222222';
+
+  it('requires the owner code, rejects demo/malformed records and merges by id', async () => {
+    const { app } = createApp({ dataDir: tmp(), providers: [new Stub()], accessCode: () => 'owner-code' });
+    expect((await request(app).post('/api/admin/import').send({ races: [realRace(id1, 1)] })).status).toBe(401);
+    const demo = { ...realRace(id2, 2), demo: { title: 'x', blurb: 'y', durationLabel: 'z' } };
+    const bad = await request(app).post('/api/admin/import').set('x-arena-access', 'owner-code').send({ races: [demo] });
+    expect(bad.status).toBe(400);
+    const ok = await request(app).post('/api/admin/import').set('x-arena-access', 'owner-code').send({ races: [realRace(id1, 1), realRace(id2, 2)], liveries: { 'openrouter:a': { nickname: 'Comet', number: 9 } } });
+    expect(ok.body).toMatchObject({ ok: true, imported: 2, total: 2 });
+    const again = await request(app).post('/api/admin/import').set('x-arena-access', 'owner-code').send({ races: [realRace(id1, 1)] });
+    expect(again.body.total).toBe(2); // no duplicates
+    expect((await request(app).get('/api/leaderboard')).body.rows[0]).toMatchObject({ modelId: 'openrouter:a', races: 2 });
+    expect((await request(app).get('/api/liveries')).body.liveries['openrouter:a'].nickname).toBe('Comet');
+  });
+
+  it('is unavailable on deployments without an access code (local mode)', async () => {
+    const { app } = createApp({ dataDir: tmp(), providers: [new Stub()] });
+    expect((await request(app).post('/api/admin/import').send({ races: [] })).status).toBe(403);
+  });
+});
