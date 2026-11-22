@@ -39,7 +39,7 @@ Commands: `npm test` (server 57 + client 17), TypeScript `tsc --noEmit` for serv
   podium → answers → replay 4× → Champions → Replays → Home stats.
 - Production build served by the production server: every route, assets, API, security rules; 0 console errors.
 - **Mobile audit (22 Nov 2026, Chrome mobile emulation — not a physical device):** every section (Home, Garage, Race,
-  Replays + genuine replay player + demo player, Champions, Pit Crew, Settings) at iPhone 13 (390×844) and iPhone SE
+  Replays + genuine replay player + demo player, Champions, Pit Crew, Settings) at iPhone 13 (390×664 browser viewport) and iPhone SE
   (320×568): 0 horizontal overflow, 0 console errors, bottom tab bar reaches all seven sections.
   Found and fixed: text links and buttons under 44 px (All replays, Open garage, Refresh catalog, Save, Revalidate,
   Paint Shop save/custom colour → 44 px); on 320 px the Race panel's sticky Start area let scrolled text show through
@@ -72,6 +72,7 @@ Commands: `npm test` (server 57 + client 17), TypeScript `tsc --noEmit` for serv
 - Secret scan of all tracked files **and the full Git history**: 0 OpenRouter/Anthropic/OpenAI/Blob key patterns,
   0 private keys, 0 occurrences of the local key or access-code values.
 - `.env`, `.env.*`, `server/data/` (race history, quota), `node_modules`, build output, video files and the ZIP are ignored.
-- Demo video (mobile-first cut): exactly 165.000 s; 0 black frames; −16.0 LUFS; narration gaps match caption boundaries;
-  automated pixel check: mobile-only until 2:30, desktop-only after; full frame review.
+- Demo video (final cut): exactly 165.000 s, 1920×1080, 30 fps; 0 black frames; −16.2 LUFS; narration gaps match caption
+  boundaries; full frame review at two sampling offsets plus every transition. Fixed during review: the earlier cut had
+  stretched the 390×664 mobile frames vertically — the final cut shows them at true proportions and 2× density.
 - Long-term free-model availability (outside our control).
