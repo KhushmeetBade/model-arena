@@ -1,4 +1,4 @@
-import type { CarCustom, LeaderboardRow, LiveryMap, ModelInfo, ProvidersResponse, RacePlan, RaceRecord, RaceSummary, Settings } from './types';
+import type { CarCustom, DemoSummary, LeaderboardRow, LiveryMap, ModelInfo, ProvidersResponse, RacePlan, RaceRecord, RaceSummary, Settings } from './types';
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) } });
@@ -17,7 +17,10 @@ export const api = {
   saveSettings: (s: Partial<Settings>) => req<Settings>('/api/settings', { method: 'PUT', body: JSON.stringify(s) }),
   createRace: (prompt: string, models: string[]) => req<RaceRecord>('/api/races', { method: 'POST', body: JSON.stringify({ prompt, models }) }),
   startRace: (id: string) => req<RaceRecord>(`/api/races/${id}/start`, { method: 'POST' }),
-  race: (id: string) => req<RaceRecord>(`/api/races/${id}`),
+  race: (id: string) => req<RaceRecord>(`/api/races/${encodeURIComponent(id)}`),
+  /** Built-in DEMO races — simulated, never real inference. */
+  demoRaces: () => req<{ races: DemoSummary[] }>('/api/demo/races'),
+  demoRace: (id: string) => req<RaceRecord>(`/api/demo/races/${encodeURIComponent(id)}`),
   races: () => req<{ races: RaceSummary[] }>('/api/races'),
   leaderboard: () => req<{ rows: LeaderboardRow[] }>('/api/leaderboard'),
   liveries: () => req<{ liveries: LiveryMap }>('/api/liveries'),

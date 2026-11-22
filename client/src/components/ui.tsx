@@ -34,6 +34,18 @@ export function ErrorNote({ children }: { children: ReactNode }) {
   return <div className="rounded border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-200">{children}</div>;
 }
 
+/** The one label used everywhere a simulated demo race appears. */
+export function DemoBadge({ size = 'sm', className = '' }: { size?: 'sm' | 'lg'; className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded border border-neon-amber/70 bg-neon-amber/15 font-display font-black uppercase tracking-[0.18em] text-neon-amber ${size === 'lg' ? 'px-3 py-1.5 text-[11px]' : 'px-1.5 py-0.5 text-[9px]'} ${className}`}
+      title="Scripted demonstration — no AI model was called, and it never counts toward real rankings."
+    >
+      ◆ Demo race — simulated results
+    </span>
+  );
+}
+
 /** Designed empty state: icon, headline, explanation and a call to action. */
 export function EmptyState({ icon, title, body, cta }: { icon?: ReactNode; title: string; body: string; cta?: { to: string; label: string } }) {
   return (

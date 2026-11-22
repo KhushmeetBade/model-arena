@@ -6,6 +6,7 @@ import { Catalog } from './catalog.js';
 import { config, RESTART_HINT } from './config.js';
 import { buildLeaderboard } from './leaderboard.js';
 import { isAllowedOrigin, localOnly } from './lib/security.js';
+import { demoRace, demoRaces } from './demo.js';
 import { LiveryMap, parseCustom } from './liveries.js';
 import { JsonStore } from './lib/store.js';
 import { AnthropicProvider } from './providers/anthropic.js';
@@ -231,6 +232,27 @@ export function createApp(opts: AppOptions = {}) {
   });
 
   app.get('/api/leaderboard', (_req, res) => res.json({ rows: buildLeaderboard(engine.list()) }));
+
+  // ---- DEMO races: simulated, read-only, never stored and never on the leaderboard ----
+  app.get('/api/demo/races', (_req, res) => {
+    res.json({
+      races: demoRaces().map((r) => ({
+        id: r.id,
+        prompt: r.prompt,
+        createdAt: r.createdAt,
+        status: r.status,
+        championId: r.championId ?? null,
+        demo: r.demo,
+        durationMs: r.events.at(-1)?.t ?? 0,
+        competitors: r.competitors.map((c) => ({ modelId: c.modelId, name: c.name, provider: c.provider, lane: c.lane, rank: c.rank, status: c.status, latencyMs: c.latencyMs, scores: c.scores })),
+      })),
+    });
+  });
+  app.get('/api/demo/races/:id', (req, res) => {
+    const r = demoRace(String(req.params.id));
+    if (!r) return void res.status(404).json({ error: 'Demo race not found' });
+    res.json(r);
+  });
 
   // ---- Car customization (colour, number, body style, nickname) ----
   app.get('/api/liveries', (_req, res) => res.json({ liveries }));

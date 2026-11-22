@@ -3,7 +3,7 @@ import { useLiveryVersion } from '../store/useLiveries';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ProviderNotice } from '../components/ProviderNotice';
-import { Badge, ErrorNote } from '../components/ui';
+import { Badge, DemoBadge, ErrorNote } from '../components/ui';
 import { livery } from '../lib/livery';
 import { api } from '../lib/api';
 import { useAsync, useIsMobile } from '../lib/hooks';
@@ -17,6 +17,7 @@ export function HomePage() {
   const providers = useAsync(() => api.providers(), [], 10_000);
   const races = useAsync(() => api.races(), [], 5_000);
   const board = useAsync(() => api.leaderboard(), [], 5_000);
+  const demos = useAsync(() => api.demoRaces(), []);
 
   const showcase: RaceView = useMemo(() => {
     const ms = (models.data?.models ?? []).slice(0, 3);
@@ -58,6 +59,9 @@ export function HomePage() {
             <div className="pointer-events-auto mt-6 flex flex-wrap gap-3">
               <Link to="/race" className="btn-race clip-angle px-8 py-4 text-sm font-black">
                 START A RACE
+              </Link>
+              <Link to="/replays/demo/demo-one-minute" className="clip-angle border border-neon-amber/50 bg-neon-amber/10 px-8 py-4 font-display text-sm font-bold tracking-widest text-neon-amber backdrop-blur hover:bg-neon-amber/20">
+                ▶ WATCH A DEMO
               </Link>
               <Link to="/garage" className="clip-angle border border-white/20 bg-white/5 px-8 py-4 font-display text-sm font-bold tracking-widest backdrop-blur hover:bg-white/10">
                 ENTER GARAGE
@@ -103,8 +107,28 @@ export function HomePage() {
         </div>
 
         <div className="mt-10">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-bold tracking-widest">TRY A DEMO RACE</h2>
+            <span className="text-[11px] text-white/45">Simulated · uses no AI requests · never affects rankings</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {(demos.data?.races ?? []).map((d) => (
+              <Link key={d.id} to={`/replays/demo/${d.id}`} className="glass clip-angle group block min-w-0 border border-neon-amber/25 p-4 transition hover:bg-white/5">
+                <div className="flex items-center justify-between gap-2">
+                  <DemoBadge />
+                  <span className="font-mono text-[11px] text-white/50">{d.demo.durationLabel}</span>
+                </div>
+                <div className="mt-2 font-display text-xl font-black italic">{d.demo.title}</div>
+                <p className="mt-1 line-clamp-3 text-sm text-white/60">{d.demo.blurb}</p>
+                <div className="mt-3 font-display text-xs font-bold tracking-widest text-neon-cyan group-hover:underline">▶ WATCH · {d.competitors.length} CARS</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold tracking-widest">RECENT RACES</h2>
+            <h2 className="font-display text-lg font-bold tracking-widest">RECENT REAL RACES</h2>
             {recent.length > 0 && (
               <Link to="/replays" className="text-xs font-bold text-neon-cyan hover:underline">
                 All replays →

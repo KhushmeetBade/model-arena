@@ -84,7 +84,8 @@ export interface JudgeScore {
 export interface CompetitorResult {
   modelId: string;
   name: string;
-  provider: ProviderId;
+  /** 'demo' marks a fictional racer in a simulated demonstration race (never a real model). */
+  provider: ProviderId | 'demo';
   lane: number;
   status: CompetitorStatus;
   text: string;
@@ -129,4 +130,6 @@ export interface RaceRecord {
   championId?: string;
   weights: Settings['weights'];
   events: RaceEvent[];
+  /** Present only on built-in DEMO races: simulated results, never real inference. */
+  demo?: { title: string; blurb: string; durationLabel: string };
 }

@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { fmtMs, lineupLiveries, providerLabel } from '../../lib/livery';
 import type { RaceView } from '../../lib/raceState';
 import { Markdown } from '../Markdown';
+import { DemoBadge } from '../ui';
 import { Trophy } from './Trophy';
 
-export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onClose: () => void; actions?: React.ReactNode }) {
+export function ChampionReveal({ view, onClose, actions, demo = false }: { view: RaceView; onClose: () => void; actions?: React.ReactNode; demo?: boolean }) {
   const [showAnswers, setShowAnswers] = useState(false);
   const liveries = lineupLiveries(view.cars);
   const standings = [...(view.standings ?? [])].sort((a, b) => a.rank - b.rank);
@@ -19,6 +20,12 @@ export function ChampionReveal({ view, onClose, actions }: { view: RaceView; onC
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-40 overflow-y-auto bg-void/75 backdrop-blur-md">
       <div className="mx-auto max-w-5xl px-4 pb-28 pt-20 md:pt-24">
+        {demo && (
+          <div className="mb-4 flex flex-col items-center gap-1 text-center">
+            <DemoBadge size="lg" />
+            <p className="text-xs text-white/55">Scripted demonstration — no AI model was called, and these results never count toward Champions.</p>
+          </div>
+        )}
         {champ && champLv ? (
           <div className="text-center">
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="font-display text-xs font-bold tracking-[0.5em] text-neon-amber">

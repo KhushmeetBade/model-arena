@@ -18,7 +18,8 @@ export interface Scores { quality: number | null; speed: number; completion: num
 export interface CompetitorResult {
   modelId: string;
   name: string;
-  provider: ProviderId;
+  /** 'demo' = fictional racer in a simulated demo race */
+  provider: ProviderId | 'demo';
   lane: number;
   status: 'queued' | 'waiting' | 'streaming' | 'finished' | 'dnf';
   text: string;
@@ -49,11 +50,17 @@ export interface RaceRecord {
   championId?: string;
   weights: { quality: number; speed: number; completion: number };
   events: RaceEvent[];
+  /** Only on built-in DEMO races (simulated results, no AI called). */
+  demo?: DemoInfo;
 }
+
+export interface DemoInfo { title: string; blurb: string; durationLabel: string }
 
 export type RaceSummary = Omit<RaceRecord, 'events' | 'competitors' | 'weights'> & {
   competitors: Pick<CompetitorResult, 'modelId' | 'name' | 'provider' | 'lane' | 'rank' | 'status' | 'latencyMs' | 'scores'>[];
 };
+
+export type DemoSummary = RaceSummary & { demo: DemoInfo; durationMs: number };
 
 export interface Settings {
   judgeModel: string;

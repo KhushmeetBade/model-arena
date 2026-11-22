@@ -91,4 +91,4 @@ export function lineupLiveries(cars: { modelId: string; name: string }[]): Liver
 }
 
 export const fmtMs = (ms?: number | null) => (ms == null ? '—' : ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(2)} s`);
-export const providerLabel = (p: string) => ({ openrouter: 'OpenRouter', anthropic: 'Anthropic', openai: 'OpenAI' })[p] ?? p;
+export const providerLabel = (p: string) => ({ openrouter: 'OpenRouter', anthropic: 'Anthropic', openai: 'OpenAI', demo: 'Simulated' })[p] ?? p;

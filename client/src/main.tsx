@@ -21,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="race" element={<RacePage />} />
           <Route path="champions" element={<ChampionsPage />} />
           <Route path="replays" element={<ReplaysPage />} />
+          <Route path="replays/demo/:id" element={<ReplayPlayerPage demo />} />
           <Route path="replays/:id" element={<ReplayPlayerPage />} />
           <Route path="pit-crew" element={<PitCrewPage />} />
           <Route path="settings" element={<SettingsPage />} />
