@@ -84,11 +84,11 @@ export function PaintShop({ model, draft, onDraft }: { model: ModelInfo; draft: 
               aria-label={`Colour ${c}`}
               aria-pressed={current.primary === c}
               onClick={() => onDraft({ ...draft, color: c })}
-              className={`h-7 w-7 rounded-full border-2 transition ${current.primary === c ? 'scale-110 border-white' : 'border-transparent hover:scale-105'}`}
+              className={`h-10 w-10 rounded-full border-2 transition ${current.primary === c ? 'scale-110 border-white' : 'border-transparent hover:scale-105'}`}
               style={{ background: c, boxShadow: current.primary === c ? `0 0 14px ${c}` : undefined }}
             />
           ))}
-          <label className="relative flex h-7 cursor-pointer items-center gap-1 rounded-full border border-white/20 px-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:border-white/50">
+          <label className="relative flex h-10 cursor-pointer items-center gap-1 rounded-full border border-white/20 px-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:border-white/50">
             Custom
             <input type="color" value={current.primary} onChange={(e) => onDraft({ ...draft, color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Custom colour" />
           </label>
@@ -122,7 +122,7 @@ export function PaintShop({ model, draft, onDraft }: { model: ModelInfo; draft: 
                 aria-pressed={current.chassis === i}
                 onClick={() => onDraft({ ...draft, chassis: i as 0 | 1 | 2 })}
                 title={CHASSIS_INFO[i]}
-                className={`clip-tab px-2 py-2 text-center font-display text-[10px] font-bold tracking-widest transition ${current.chassis === i ? 'bg-neon-violet/70 text-white' : 'bg-white/5 text-white/55 hover:bg-white/10'}`}
+                className={`clip-tab min-h-10 px-2 py-2 text-center font-display text-[10px] font-bold tracking-widest transition ${current.chassis === i ? 'bg-neon-violet/70 text-white' : 'bg-white/5 text-white/55 hover:bg-white/10'}`}
               >
                 {name}
               </button>

@@ -231,7 +231,7 @@ export function RacePage() {
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {PRESETS.map((p, i) => (
-                  <button key={i} onClick={() => setPrompt(p)} className="rounded border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:border-neon-cyan hover:text-white">
+                  <button key={i} onClick={() => setPrompt(p)} className="min-h-10 rounded border border-white/10 px-3 py-2 text-xs text-white/60 hover:border-neon-cyan hover:text-white">
                     Preset {i + 1}
                   </button>
                 ))}
@@ -256,7 +256,7 @@ export function RacePage() {
                         </span>
                         {slot.model && <Badge tone={slot.model.free ? 'lime' : 'amber'}>{slot.model.free ? 'free' : 'paid'}</Badge>}
                         {!ok && <Badge tone="amber">{slot.state === 'unlisted' ? 'unlisted' : 'offline'}</Badge>}
-                        <button onClick={() => toggle(slot.id)} className="px-1 text-white/40 hover:text-red-300" aria-label={`Remove ${slot.model?.name ?? slot.id}`}>✕</button>
+                        <button onClick={() => toggle(slot.id)} className="flex h-10 w-10 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-red-300" aria-label={`Remove ${slot.model?.name ?? slot.id}`}>✕</button>
                       </div>
                       {!ok && <div className="mt-0.5 truncate pl-6 text-[11px] text-neon-amber/90" title={slot.reason}>{slot.reason}</div>}
                     </div>

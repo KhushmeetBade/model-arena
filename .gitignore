@@ -9,3 +9,4 @@ server/data
 !.env.example
 .playwright-mcp
 *.log
+Model-Arena-AppFusion-2026.zip

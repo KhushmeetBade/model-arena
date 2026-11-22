@@ -124,7 +124,7 @@ export function GaragePage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`clip-tab px-4 py-1.5 font-display text-[10px] font-bold uppercase tracking-widest ${filter === f ? 'bg-neon-violet/60' : 'bg-white/5 text-white/60'}`}
+                className={`clip-tab min-h-10 px-4 py-2 font-display text-[11px] font-bold uppercase tracking-widest ${filter === f ? 'bg-neon-violet/60' : 'bg-white/5 text-white/60'}`}
               >
                 {f}
               </button>
@@ -183,7 +183,7 @@ function ModelCard({ m, selected, focused, onFocus, onToggle, full }: { m: Model
             onToggle();
           }}
           disabled={!selected && (full || !m.available)}
-          className={`ml-auto rounded px-2 py-1 font-display text-[10px] font-bold tracking-widest disabled:opacity-30 ${selected ? 'bg-neon-pink text-white' : 'border border-white/20 text-white/70 hover:border-neon-pink'}`}
+          className={`ml-auto min-h-10 min-w-16 rounded px-3 py-2 font-display text-[11px] font-bold tracking-widest disabled:opacity-30 ${selected ? 'bg-neon-pink text-white' : 'border border-white/20 text-white/70 hover:border-neon-pink'}`}
         >
           {selected ? 'ON GRID' : '+ GRID'}
         </button>
