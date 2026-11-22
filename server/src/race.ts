@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Catalog } from './catalog.js';
 import { buildJudgePrompt, JUDGE_SYSTEM, parseJudgeResponse } from './judge.js';
-import { JsonStore } from './lib/store.js';
+import type { SyncStore } from './lib/persistence.js';
 import { PreflightResult, QuotaManager } from './quota.js';
 import { scoreCompetitors } from './scoring.js';
 import { CompetitorResult, Evaluation, ModelInfo, ProviderError, ProviderId, RaceEvent, RaceRecord, Settings } from './types.js';
@@ -31,27 +31,50 @@ export class RaceError extends Error {
   }
 }
 
+export interface EngineOptions {
+  /** Save races at start and after each car (default true). Serverless saves only the final result. */
+  persistLive?: boolean;
+  /** Upper bound for each car's request (serverless functions have a hard time limit). */
+  maxCarMs?: number;
+  /** Timeout for each judge attempt (default 90 s). */
+  judgeMs?: number;
+}
+
 export class RaceEngine {
   private live = new Map<string, { record: RaceRecord; listeners: Set<Listener> }>();
-  private history: RaceRecord[];
+  private done = new Map<string, Promise<void>>();
 
   constructor(
     private catalog: Catalog,
     private quota: QuotaManager,
-    private store: JsonStore<RaceRecord[]>,
+    private store: SyncStore<RaceRecord[]>,
     private getSettings: () => Settings,
+    private opts: EngineOptions = {},
   ) {
-    this.history = store.read();
-    // Any race that was mid-flight when the server stopped can't be resumed.
-    for (const r of this.history) {
+    // Any race that was mid-flight when the server stopped can't be resumed (only stored when persistLive).
+    const history = store.read();
+    let changed = false;
+    for (const r of history) {
       if (r.status === 'running' || r.status === 'judging' || r.status === 'ready') {
         r.status = 'failed';
         r.finishedAt ??= Date.now();
         const t = r.events.at(-1)?.t ?? 0;
         r.events.push({ t, type: 'race.failed', data: { error: 'Server restarted mid-race — this race could not be finished.' } });
         for (const c of r.competitors) if (c.status !== 'finished' && c.status !== 'dnf') Object.assign(c, { status: 'dnf', error: 'server restarted' });
+        changed = true;
       }
     }
+    if (changed) store.write(history);
+  }
+
+  /** Saved history (always read through the store, so refreshed remote state is visible). */
+  private get history(): RaceRecord[] {
+    return this.store.read();
+  }
+
+  /** Resolves when a started race has finished (complete or failed) and been persisted. */
+  finished(id: string): Promise<void> {
+    return this.done.get(id) ?? Promise.resolve();
   }
 
   private validateLineup(modelIds: unknown): string[] {
@@ -164,8 +187,8 @@ export class RaceEngine {
     r.status = 'running';
     r.startedAt = Date.now();
     this.emit(r, 'race.start', { prompt: r.prompt });
-    this.persist(r); // saved from the start, so a restart mid-race still leaves a (red-flagged) replay
-    void this.run(r);
+    if (this.opts.persistLive !== false) this.persist(r); // saved from the start, so a restart mid-race still leaves a (red-flagged) replay
+    this.done.set(r.id, this.run(r));
     return r;
   }
 
@@ -215,7 +238,8 @@ export class RaceEngine {
     const model = (await this.catalog.get(c.modelId))!;
     const provider = this.catalog.provider(model.provider)!;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), settings.timeoutMs);
+    const carTimeoutMs = Math.min(settings.timeoutMs, this.opts.maxCarMs ?? Infinity);
+    const timeout = setTimeout(() => controller.abort(), carTimeoutMs);
     const sentAt = Date.now();
     let firstAt: number | null = null;
     let lastFlush = 0;
@@ -300,16 +324,16 @@ export class RaceEngine {
         tps: c.tokensPerSec ?? null,
         finishReason: result.finishReason ?? null,
       });
-      this.persist(r);
+      this.checkpoint(r);
     } catch (err) {
       flush(true);
       const aborted = controller.signal.aborted;
       c.status = 'dnf';
       c.latencyMs = Date.now() - sentAt;
-      c.error = aborted ? `timed out after ${Math.round(settings.timeoutMs / 1000)}s` : err instanceof Error ? err.message : String(err);
+      c.error = aborted ? `timed out after ${Math.round(carTimeoutMs / 1000)}s` : err instanceof Error ? err.message : String(err);
       this.quota.recordFailure(model.provider, model.id, aborted ? new ProviderError('timeout', 'timeout') : err);
       this.emit(r, 'car.dnf', { lane: c.lane, error: c.error });
-      this.persist(r);
+      this.checkpoint(r);
     } finally {
       clearTimeout(timeout);
     }
@@ -358,7 +382,7 @@ export class RaceEngine {
       }
       this.emit(r, 'judge.start', { judgeModel: j.id, judgeName: j.name });
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90_000);
+      const timeout = setTimeout(() => controller.abort(), this.opts.judgeMs ?? 90_000);
       try {
         this.quota.recordRequest(j.provider);
         const res = await provider.stream({
@@ -399,8 +423,12 @@ export class RaceEngine {
   }
 
   private persist(r: RaceRecord) {
-    this.history = [r, ...this.history.filter((x) => x.id !== r.id)].slice(0, MAX_HISTORY);
-    this.store.write(this.history);
+    this.store.write([r, ...this.history.filter((x) => x.id !== r.id)].slice(0, MAX_HISTORY));
+  }
+
+  /** Mid-race checkpoint (skipped on serverless, where only the final result is written). */
+  private checkpoint(r: RaceRecord) {
+    if (this.opts.persistLive !== false) this.persist(r);
   }
 }
 

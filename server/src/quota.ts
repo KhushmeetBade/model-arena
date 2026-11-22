@@ -1,4 +1,4 @@
-import { JsonStore } from './lib/store.js';
+import type { SyncStore } from './lib/persistence.js';
 import { nextUtcMidnight } from './providers/openrouter.js';
 import { ProviderError, ProviderId } from './types.js';
 
@@ -65,8 +65,16 @@ export class QuotaManager {
   private timer: NodeJS.Timeout | null = null;
   private revalidator: Revalidator | null = null;
 
-  constructor(private store: JsonStore<QuotaState> | null, private now: () => number = Date.now) {
+  constructor(private store: SyncStore<QuotaState> | null, private now: () => number = Date.now) {
     this.state = store?.read() ?? { providers: {}, models: {} };
+    this.state.providers ??= {};
+    this.state.models ??= {};
+  }
+
+  /** Re-read persisted counters (e.g. after another serverless instance updated them). */
+  reload() {
+    if (!this.store) return;
+    this.state = this.store.read() ?? { providers: {}, models: {} };
     this.state.providers ??= {};
     this.state.models ??= {};
   }
