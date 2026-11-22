@@ -97,6 +97,17 @@ export class BlobPersistence implements Persistence {
     return true;
   }
 
+  /** Take remote values for keys we haven't changed; merge the ones we have (where a rule exists). */
+  private async mergeFromRemote() {
+    const remote = await this.fetchRemote();
+    if (remote === 'unchanged') return;
+    for (const [k, v] of Object.entries(remote.doc)) {
+      if (!this.dirty.has(k)) this.doc[k] = v;
+      else if (this.opts.merge?.[k]) this.doc[k] = this.opts.merge[k](v, this.doc[k]);
+    }
+    this.etag = remote.etag;
+  }
+
   private schedule() {
     if (this.timer) return;
     this.timer = setTimeout(() => {
@@ -115,6 +126,9 @@ export class BlobPersistence implements Persistence {
     if (this.pending) await this.pending;
     if (!this.dirty.size) return;
     this.pending = (async () => {
+      // Without an ETag we can't write conditionally (e.g. the document didn't exist when we last
+      // looked): re-read and merge first, so a concurrent first write is never silently overwritten.
+      if (this.etag === null) await this.mergeFromRemote();
       for (let attempt = 0; attempt < 4; attempt++) {
         const names = [...this.dirty];
         try {
@@ -134,13 +148,7 @@ export class BlobPersistence implements Persistence {
         } catch (e) {
           if (!(e instanceof BlobPreconditionFailedError) || attempt === 3) throw e;
           // another instance wrote first: merge its state with ours and try again
-          const remote = await this.fetchRemote();
-          if (remote === 'unchanged') continue;
-          for (const [k, v] of Object.entries(remote.doc)) {
-            if (!this.dirty.has(k)) this.doc[k] = v;
-            else if (this.opts.merge?.[k]) this.doc[k] = this.opts.merge[k](v, this.doc[k]);
-          }
-          this.etag = remote.etag;
+          await this.mergeFromRemote();
         }
       }
     })();

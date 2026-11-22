@@ -40,20 +40,42 @@ function useLiverySync() {
   }, [load]);
 }
 
+/** Tracks the browser's connectivity so the app can say it is offline instead of failing silently. */
+function useOnline() {
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+  return online;
+}
+
 export function Layout() {
   const loc = useLocation();
   const testMode = useTestMode();
+  const online = useOnline();
   useLiverySync();
   useLiveryVersion(); // re-render the whole app when a car is customized
   const immersive = loc.pathname.startsWith('/race') || loc.pathname.startsWith('/replays/');
   return (
     <div className="flex min-h-full flex-col">
+      {!online && (
+        <div role="alert" className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-[70] mx-auto w-fit rounded bg-red-500/90 px-3 py-1.5 text-center text-xs font-bold text-white shadow md:bottom-4">
+          You're offline — live races, replays and rankings need a connection. They'll reload automatically.
+        </div>
+      )}
       {testMode && (
         <div role="status" className="relative z-[60] h-6 truncate bg-neon-amber px-2 py-1 text-center font-display text-[11px] font-black tracking-[0.2em] text-black">
           TEST MODE — synthetic scripted models, not real AI. Real app: http://localhost:5173
         </div>
       )}
-      <header className={`z-50 ${immersive ? `absolute inset-x-0 ${testMode ? 'top-6' : 'top-0'}` : 'sticky top-0'} border-b border-white/5 bg-void/70 backdrop-blur-xl`}>
+      <header className={`z-50 ${immersive ? `absolute inset-x-0 ${testMode ? 'top-6' : 'top-0'}` : 'sticky top-0'} border-b border-white/5 bg-void/70 backdrop-blur-xl`} style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-6 px-4">
           <NavLink to="/" className="flex items-center gap-2">
             <img src="/favicon.svg" className="h-7 w-7" alt="" />

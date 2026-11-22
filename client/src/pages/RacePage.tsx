@@ -8,7 +8,9 @@ import { Hud } from '../components/race/Hud';
 import { Telemetry } from '../components/race/Telemetry';
 import { Badge } from '../components/ui';
 import { api } from '../lib/api';
-import { useAsync, useIsMobile, useLiveRace } from '../lib/hooks';
+import { useAsync, useIsMobile } from '../lib/hooks';
+import { accessApi, accessCode, ApiError, runRace } from '../lib/api';
+import { applyEvent } from '../lib/raceState';
 import { lineupLiveries, providerLabel } from '../lib/livery';
 import { emptyView, type RaceView } from '../lib/raceState';
 import { autoFillLineup, budgetLabel, resolveLineup } from '../lib/lineup';
@@ -39,13 +41,21 @@ export function RacePage() {
   const { lineup, toggle, setLineup, lastPrompt, setLastPrompt } = useArena();
   const models = useAsync(() => api.models(), [], 15_000);
   const [prompt, setPrompt] = useState(lastPrompt || PRESETS[0]);
+  // raceId: a local id for the race on screen; savedId: the server's id once the race is saved
   const [raceId, setRaceId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [liveView, setLiveView] = useState<RaceView>(emptyView);
+  const [connError, setConnError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const access = useAsync(() => accessApi.required(), []);
+  const [code, setCode] = useState(accessCode.get());
+  const [codeInput, setCodeInput] = useState('');
+  const needsCode = !!access.data?.required && !code;
   const [countdown, setCountdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [showReveal, setShowReveal] = useState(true);
   const [showRadio, setShowRadio] = useState(!mobile);
-  const { view: liveView, connError } = useLiveRace(raceId);
 
   const all = models.data?.models ?? [];
   const available = all.filter((m) => m.available);
@@ -110,39 +120,76 @@ export function RacePage() {
   const finishedTimes = view.cars.map((c) => c.latencyMs ?? 0);
   const displayClock = view.phase === 'complete' || view.phase === 'failed' ? Math.max(...finishedTimes, view.t) : clock;
 
-  async function start() {
+  function start() {
+    if (raceId) return; // no duplicate submissions while a race is on screen
     setError(null);
-    setCreating(true);
-    try {
-      setLastPrompt(prompt);
-      const race = await api.createRace(prompt, lineup);
-      startWall.current = null;
-      setClock(0);
-      setShowReveal(true);
-      setRaceId(race.id);
-      setCountdown(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setCreating(false);
-    }
+    setConnError(null);
+    setSavedId(null);
+    setLastPrompt(prompt);
+    startWall.current = null;
+    setClock(0);
+    setShowReveal(true);
+    setLiveView(emptyView());
+    setRaceId(`local-${Date.now()}`);
+    setCountdown(true);
   }
 
+  /** Lights out: one request validates, runs, judges, saves and streams the whole race. */
   async function go() {
-    if (!raceId) return;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    let gotEvents = false;
     try {
-      await api.startRace(raceId);
+      const { id } = await runRace(prompt, lineup, (ev) => {
+        gotEvents = true;
+        setLiveView((v) => applyEvent(v, ev));
+      }, ctrl.signal);
+      setSavedId(id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (ctrl.signal.aborted) return;
+      const err = e instanceof ApiError ? e : new ApiError(e instanceof Error ? e.message : String(e), 0);
+      if (err.code === 'access_required') {
+        accessCode.set('');
+        setCode('');
+      }
+      if (!gotEvents) {
+        // rejected before the race started (validation, quota, access): back to the setup panel
+        setRaceId(null);
+        setError(err.message);
+      } else {
+        setConnError('Connection lost mid-race. The race keeps running on the server and will appear in Replays when it finishes.');
+      }
+    } finally {
+      setCreating(false);
+      void models.reload();
     }
   }
 
   function reset() {
+    abortRef.current?.abort();
     setRaceId(null);
+    setSavedId(null);
+    setConnError(null);
     setCountdown(false);
+    setLiveView(emptyView());
     startWall.current = null;
     setClock(0);
     void models.reload();
+  }
+
+  async function saveCode() {
+    const v = codeInput.trim();
+    if (!v) return;
+    accessCode.set(v);
+    try {
+      await accessApi.verify();
+      setCode(v);
+      setCodeInput('');
+      setError(null);
+    } catch (e) {
+      accessCode.set('');
+      setError(e instanceof Error ? e.message : String(e));
+    }
   }
 
   const inRace = !!raceId;
@@ -243,11 +290,37 @@ export function RacePage() {
               {planError && <div className="mt-3 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">Couldn't check the request budget: {planError}</div>}
               {error && <div className="mt-3 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>}
 
+              {needsCode && (
+                <div className="mt-3 rounded border border-neon-cyan/40 bg-neon-cyan/10 p-3 text-sm">
+                  <label htmlFor="access-code" className="font-display text-[11px] font-bold tracking-widest text-neon-cyan">
+                    OWNER ACCESS CODE
+                  </label>
+                  <p className="mt-1 text-xs text-white/65">
+                    Live races use the owner's free OpenRouter quota, so they are locked on this public site. Everyone can watch the{' '}
+                    <Link to="/replays" className="underline">demo races and real race replays</Link>.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      id="access-code"
+                      type="password"
+                      autoComplete="current-password"
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && void saveCode()}
+                      className="h-11 min-w-0 flex-1 rounded border border-white/20 bg-black/40 px-3 font-mono text-sm outline-none focus:border-neon-cyan"
+                      placeholder="Enter code"
+                    />
+                    <button onClick={() => void saveCode()} className="h-11 rounded bg-neon-cyan/80 px-4 font-display text-xs font-black text-black">
+                      UNLOCK
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Pinned to the bottom of the panel so START is always reachable on small screens */}
               <div className="sticky bottom-0 -mx-5 -mb-5 mt-4 bg-gradient-to-t from-[#0b0820] via-[#0b0820]/95 to-transparent px-5 pb-4 pt-3">
                 <button
                   onClick={start}
-                  disabled={creating || !prompt.trim() || grid.ready.length === 0 || !!blockedReason || !plan}
+                  disabled={creating || !!raceId || needsCode || !prompt.trim() || grid.ready.length === 0 || !!blockedReason || !plan}
                   className="btn-race clip-angle w-full py-4 text-base font-black text-white disabled:opacity-50"
                 >
                   {creating ? 'PREPARING GRID…' : !plan && !blockedReason && grid.ready.length ? 'CHECKING QUOTA…' : 'START RACE'}
@@ -292,7 +365,7 @@ export function RacePage() {
           actions={
             <>
               <button onClick={reset} className="btn-race clip-tab px-4 py-2 text-[11px] font-black">RACE AGAIN</button>
-              <Link to={`/replays/${raceId}`} className="clip-tab bg-neon-violet/30 px-4 py-2 font-display text-[11px] font-bold tracking-widest hover:bg-neon-violet/50">WATCH REPLAY</Link>
+              <Link to={savedId ? `/replays/${savedId}` : '/replays'} className="clip-tab bg-neon-violet/30 px-4 py-2 font-display text-[11px] font-bold tracking-widest hover:bg-neon-violet/50">WATCH REPLAY</Link>
             </>
           }
         />

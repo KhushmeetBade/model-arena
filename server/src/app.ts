@@ -45,6 +45,8 @@ export interface AppOptions {
   allowedHosts?: string[];
   /** Cap on live AI races per UTC day on this deployment (protects the owner's free quota). */
   maxLiveRacesPerDay?: number;
+  /** When set, live races are refused with this message (e.g. durable storage not configured). */
+  liveRacesDisabled?: string;
 }
 
 const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' };
@@ -231,6 +233,7 @@ export function createApp(opts: AppOptions = {}) {
   }));
 
   const checkDailyCap = () => {
+    if (opts.liveRacesDisabled) throw new RaceError(opts.liveRacesDisabled, 503);
     const cap = opts.maxLiveRacesPerDay;
     if (!cap) return;
     const today = new Date().toISOString().slice(0, 10);
