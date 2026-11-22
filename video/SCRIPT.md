@@ -1,40 +1,42 @@
-# Model Arena — demo video (final cut)
+# Model Arena — demo video (final cut, mobile-first)
 
-**File:** `video/Model-Arena-Demo.mp4` (in the submission ZIP; not committed to Git because it is larger than GitHub's 100 MB limit)
-**Length:** 2:45 · **Format:** 1920×1080, 30 fps, H.264 + AAC 48 kHz stereo, −16 LUFS
+**File:** `video/Model-Arena-Demo.mp4` (in the submission ZIP; video files are not committed to Git)
+**Length:** 2:45.0 exactly · **Format:** 1920×1080, 30 fps, H.264 + AAC 48 kHz stereo, −16 LUFS
+
+## Structure
+- **0:00–2:30 — mobile interface only.** The real app at an iPhone 13 viewport (390×844, rendered at 2× for sharpness)
+  in Chrome's mobile emulation, shown full-height (≈1.23× real size) with section titles on the left and captions on the
+  right, so captions never cover the interface. It is a responsive web app, not a native iPhone app, and the video says so.
+- **2:30–2:45 — desktop interface only.** The same app in a desktop browser.
+- Scenes join with 0.5 s crossfades (no black frames). The mobile→desktop crossfade starts exactly at 2:30.
 
 ## How it was made
-- **Footage:** real screen recordings of the working app (local production build), captured with Chrome DevTools
-  screencast at 55–60 fps and scripted with Playwright clicks and scrolls. No mock-ups, no edited results.
-- **Data:** the 11 stored genuine races. The private race `c25d9535` was removed from the recording copy.
-- **No AI requests** were made while recording: the Race page's own quota preflight disabled Start, and it was never pressed.
-- **Narration:** macOS text-to-speech (voice “Samantha”), one clip per sentence so captions are exactly in sync.
-- **Captions, labels, title cards:** rendered as images and overlaid. On-screen labels state provenance:
-  “GENUINE RACE · real OpenRouter inference”, “SIMULATED DEMO RACE · no AI requests”,
-  “MOBILE · Chrome mobile emulation — not a physical iPhone”.
-- **Music:** an original ambient pad synthesised with ffmpeg (no third-party audio), mixed well below the voice.
-- **Verified:** full-length frame review (one frame every 3 s), loudness −16.1 LUFS, and every speech segment detected
-  at its caption time (silence detection, ±0.1 s).
+- **Footage:** real screen recordings of the working local production build (Chrome DevTools screencast, scripted taps,
+  scrolls and clicks). Data: the 11 stored genuine races; private race `c25d9535` was removed from the recording copy.
+- **No AI requests:** the Race page's own quota preflight kept Start locked, and it was never pressed.
+- **Narration:** macOS voice “Samantha”, one clip per sentence placed at its exact time; captions use the same timings.
+- **Music:** original ambient pad synthesised with ffmpeg (no third-party audio), mixed well below the voice.
+- **Verified on the exported file:** duration 165.000 s; 0 black frames (blackdetect); −16.0 LUFS; every sentence gap
+  lines up with a caption boundary (silence detection); an automated pixel check of every half-second confirmed that
+  only background surrounds the phone before 2:30 and desktop footage fills the frame after it; full frame-by-frame review.
 
 ## Timeline and narration
 | Time | Picture (real footage) | Narration |
 |---|---|---|
-| 0:00–0:05 | Title card | “Model Arena. AI comparison you can watch.” |
-| 0:05–0:18 | Home: 3D hero, stats, demo and recent-race cards | “Which AI model gives the best answer? Normally you paste one prompt into several tools and guess. Model Arena turns that comparison into a race. This is the real app, with its saved race history.” |
-| 0:18–0:33 | Garage: free-model cards, select Nemotron 3.5 Super VL, Paint Shop | “The Garage lists eleven free OpenRouter models, each costing zero dollars, with the real model name on every card. Up to five cars join the grid, and the Paint Shop sets colour, number and nickname.” |
-| 0:33–0:48 | Race: prompt typed, starting grid, quota preflight blocks the race (Start not pressed) | “One prompt is sent identically to every car. Before starting, the app checks the free quota, including the judge. Today it is nearly used up, so the race is blocked with a clear reason. No new AI requests are made in this video.” |
-| 0:48–1:07 | Genuine race 348cee31 replay: cars, HUD, judging, Team Radio answers (pause/resume) | “This is a genuine race, recorded on November twenty-first with real OpenRouter inference. The prompt: Hey love, find me the love of my life. Tokens move the cars, and Team Radio shows each model's actual streamed answer.” |
-| 1:07–1:28 | Champion reveal, podium, classification table, judge comment | “A neutral judge, NVIDIA Nemotron 3 Ultra, scores accuracy, helpfulness, clarity and completeness, combined with speed into a total. Nemotron 3.5 Super VL won with 95.1 points, ahead of Nemotron 3 Nano Omni and ERNIE 5.5 Flash, and the judge explains why.” |
-| 1:28–1:34 | View Answers: full genuine responses | “View Answers shows every full response, so you can check the verdict.” |
-| 1:34–1:45 | Replays archive: 11 genuine races, demo section | “Replays archives eleven genuine races, including cars that were rate limited and did not finish. Demo races sit in a separate section.” |
-| 1:45–1:57 | One-Minute Championship (SIMULATED badge) at 2× | “The One-Minute Championship is simulated, makes no AI requests, and is always labelled. It lets anyone explore the app without using quota.” |
-| 1:57–2:04 | Champions standings | “Champions turns genuine races into season standings. Demo races never count.” |
-| 2:04–2:15 | Pit Crew (quota, locked paid providers) → Settings | “Pit Crew shows provider status and the free quota. Keys stay on the server and paid providers are hard locked. Settings tunes scoring, the judge and race rules.” |
-| 2:15–2:26 | Chrome mobile emulation (iPhone 13 size): Home → bottom tab bar → genuine replay | “It is mobile first. This is Chrome mobile emulation, not a physical iPhone. A bottom tab bar reaches every section, and replays fit the screen.” |
-| 2:26–2:38 | How-it-works card (architecture, 74 tests) | “React, TypeScript and three.js on the client; Node and Express stream every token with server-sent events. Seventy-four automated tests cover scoring, safety, quotas and streaming.” |
-| 2:38–2:45 | End card | “Model Arena. One prompt, real models, a verdict you can see.” |
+| 0:00.0–0:12.5 | Mobile Home (hero) — title panel | “This is Model Arena: a responsive web app, shown here at iPhone size in a mobile browser. One prompt goes to several real AI models, and a neutral AI judge decides the winner.” |
+| 0:12.5–0:25.5 | Mobile Home dashboard: stats, scroll to demo and recent genuine races | “The Home dashboard shows the free competitors, races run, the last champion and the season leader. Scroll down for demo races and the most recent genuine races.” |
+| 0:25.5–0:40.5 | Mobile Garage: model list scroll, tap Nemotron 3.5 Super VL, details, Paint Shop | “In the Garage, every card is a free OpenRouter model, with its real name and provider. Tap a car for its details, stats and Paint Shop: colour, number, body style and nickname.” |
+| 0:40.5–0:55.5 | Mobile Race setup: prompt typed, grid, quota preflight (Start locked, not pressed) | “On the Race page, you pick up to five cars and write one prompt that every car receives. Before starting, the app checks the free quota. Today it is used up, so Start stays locked, and no new AI requests are made.” |
+| 0:55.5–1:23.5 | Genuine race 348cee31 on mobile: race, HUD, Team Radio answers per model, steward judging | “So here is a genuine race, recorded with real OpenRouter inference. The prompt was: Hey love, find me the love of my life. Tokens move the cars. The HUD shows each model's position, finish time and streaming speed. Team Radio shows the actual answer each model streamed, word for word. Then the race steward, a separate AI model, starts judging.” |
+| 1:23.5–1:48.5 | Mobile champion reveal, podium, judge comment + classification, View Answers (full responses) | “The judge, NVIDIA Nemotron 3 Ultra, scores accuracy, helpfulness, clarity and completeness, and that quality is combined with speed. Nemotron 3.5 Super VL wins with 95.1 points, ahead of Nemotron 3 Nano Omni and ERNIE 5.5 Flash. The judge explains its verdict, and View Answers opens every full response.” |
+| 1:48.5–2:01.5 | Mobile Replays list → replay player: 2×, 4×, pause, restart | “Replays keeps every genuine race, with its winner, scores and any cars that did not finish. Each replay can be paused, restarted, or played at up to four times speed.” |
+| 2:01.5–2:10.0 | Mobile Champions standings | “Champions ranks every model across all genuine races, by wins, podiums and average score.” |
+| 2:10.0–2:17.5 | Mobile Pit Crew (quota, locked paid providers) | “Pit Crew shows provider status and the daily free quota. Paid providers are locked on the server.” |
+| 2:17.5–2:24.0 | Mobile Settings (scoring weights, judge, race rules) | “Settings adjusts the scoring weights, the judge and the race rules.” |
+| 2:24.0–2:30.0 | Bottom tab bar: tapping through all seven sections | “And the bottom tab bar reaches all seven sections with one thumb.” |
+| 2:30.0–2:45.0 | DESKTOP: Home → Garage → Replays → Champions | “The same app also runs in desktop browsers, with a wider layout for larger screens. Model Arena: AI comparison you can watch.” |
 
 ## Honesty notes
-- The genuine race shown is `348cee31`, recorded 21 Nov 2026; all names, answers, scores and the judge's comment are the stored originals.
-- The One-Minute Championship is a scripted demo race with fictional racers, and is labelled simulated throughout.
-- The mobile segment is browser emulation, and says so on screen. Physical-iPhone footage is not included.
+- Genuine race `348cee31` (recorded 21 Nov 2026) is shown as a replay of stored real data: names, answers, scores and the
+  judge's comment are the originals. No race was run for the video.
+- Mobile footage is browser emulation, labelled on screen; no physical-iPhone footage is included.

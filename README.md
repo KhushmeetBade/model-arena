@@ -10,7 +10,7 @@ Built from scratch for **AppFusion Hackathon 2026 (TRU AI Club)** by **Apex Inte
 ![Home](screenshots/01-home.png)
 
 **Live:** https://model-arena-lake.vercel.app (demo races open to everyone; live races need the owner code) ·
-**Demo video:** `video/Model-Arena-Demo.mp4` (2:45, in the submission ZIP)
+**Demo video:** `video/Model-Arena-Demo.mp4` (2:45, in the submission ZIP — 2:30 of the mobile interface, then 15 s desktop)
 
 ## Problem and users
 Comparing models normally means pasting the same prompt into several tools and judging the answers by hand.

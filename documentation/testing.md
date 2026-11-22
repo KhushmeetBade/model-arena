@@ -72,5 +72,6 @@ Commands: `npm test` (server 57 + client 17), TypeScript `tsc --noEmit` for serv
 - Secret scan of all tracked files **and the full Git history**: 0 OpenRouter/Anthropic/OpenAI/Blob key patterns,
   0 private keys, 0 occurrences of the local key or access-code values.
 - `.env`, `.env.*`, `server/data/` (race history, quota), `node_modules`, build output, video files and the ZIP are ignored.
-- Demo video: full-length frame review, −16.1 LUFS loudness, narration detected at every caption time.
+- Demo video (mobile-first cut): exactly 165.000 s; 0 black frames; −16.0 LUFS; narration gaps match caption boundaries;
+  automated pixel check: mobile-only until 2:30, desktop-only after; full frame review.
 - Long-term free-model availability (outside our control).
