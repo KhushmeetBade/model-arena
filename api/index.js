@@ -12,9 +12,10 @@ import path from 'node:path';
 import { createApp } from '../server/dist/app.js';
 import { BlobPersistence, FilePersistence, mergeRaces } from '../server/dist/lib/persistence.js';
 import { deploymentHosts } from '../server/dist/lib/security.js';
+import { cleanKey } from '../server/dist/config.js';
 
 const hasBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
-const accessCode = process.env.ARENA_ACCESS_CODE?.trim();
+const accessCode = cleanKey(process.env.ARENA_ACCESS_CODE, 'ARENA_ACCESS_CODE') || undefined;
 
 const { app } = createApp({
   serverless: true,

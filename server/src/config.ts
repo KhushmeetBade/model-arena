@@ -17,13 +17,25 @@ function envFileMtime(): number | null {
 }
 const envMtimeAtStart = envFileMtime();
 
+/**
+ * Normalises an API key pasted into a hosting dashboard: trims whitespace/newlines and removes an
+ * accidental "NAME=" prefix, a "Bearer " prefix and surrounding quotes. Never logs the value.
+ */
+export function cleanKey(raw: string | undefined, name: string): string {
+  let k = (raw ?? '').trim();
+  k = k.replace(new RegExp(`^(export\\s+)?${name}\\s*=\\s*`), '');
+  k = k.replace(/^bearer\s+/i, '');
+  k = k.replace(/^(["'`])(.*)\1$/s, '$2').trim();
+  return k.replace(/\s+/g, '');
+}
+
 export const config = {
   port: Number(process.env.PORT ?? 8787),
   dataDir: process.env.DATA_DIR ?? path.resolve(here, '../data'),
   clientDist: path.resolve(here, '../../client/dist'),
-  openrouterKey: () => process.env.OPENROUTER_API_KEY?.trim() || '',
-  anthropicKey: () => process.env.ANTHROPIC_API_KEY?.trim() || '',
-  openaiKey: () => process.env.OPENAI_API_KEY?.trim() || '',
+  openrouterKey: () => cleanKey(process.env.OPENROUTER_API_KEY, 'OPENROUTER_API_KEY'),
+  anthropicKey: () => cleanKey(process.env.ANTHROPIC_API_KEY, 'ANTHROPIC_API_KEY'),
+  openaiKey: () => cleanKey(process.env.OPENAI_API_KEY, 'OPENAI_API_KEY'),
   /**
    * Paid providers are hard-locked off unless ALLOW_PAID_PROVIDERS is exactly "true".
    * The Settings page can never override this lock.
